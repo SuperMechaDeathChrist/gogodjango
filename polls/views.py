@@ -159,9 +159,9 @@ def get_feed(request):
     aids=[
     'accel-world-dub',
     'overlord-iv',
+    'https://gogoanime.lu/category/dungeon-ni-deai-wo-motomeru-no-wa-machigatteiru-darou-ka-iv',
     'high-school-dxd-dub',#12
     'https://gogoanime.gg/category/high-school-dxd-new-dub',#13
-    # 'high-school-dxd-new-dub'
     'https://gogoanime.gg/category/high-school-dxd-born-dub',#15
     'high-school-dxd-hero-dub',#18
     'https://gogoanime.gg/category/high-school-dxd-specials-ova',

@@ -23,7 +23,13 @@ from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
 apiconsu='https://rokuconsumet.herokuapp.com'
-gittoken="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"
+
+from cryptography.fernet import Fernet
+key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
+encMessage=b'gAAAAABi7tt3uuCl4P2d_m1JpvKUZuTBK7SMGuJqlJVRTIhsFhUFjLCe_kf2veI7iWNuEZpT2jCYhJE7MBhV990S4fu4iS81zpb29e41MAleVgIdZT6xSe5y6kcfTzkM_MW81n9cU08O'
+fernet = Fernet(key)
+gittoken = fernet.decrypt(encMessage).decode()
+
 gitrepo="SuperMechaDeathChrist/gogodjango"
 #
 

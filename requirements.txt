@@ -10,3 +10,4 @@ tzdata==2022.1
 urllib3==1.26.10
 PyGithub==1.55
 wincertstore==0.2
+cryptography==3.4.8

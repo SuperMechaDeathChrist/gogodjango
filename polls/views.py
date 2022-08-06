@@ -569,6 +569,9 @@ def favorite_series(request):
     root.appendChild(feed)
 
     for aid in aids:
+        print(aid)
+
+    for aid in aids:
         if not aid:
             continue
         if db_flixhq.isin(aid):
@@ -578,7 +581,6 @@ def favorite_series(request):
         else:
             r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
             a=r.json()        
-
         title=rk.titlexml(a['title'])
         thumbnail=a['image']
 

@@ -568,12 +568,13 @@ def favorite_series(request):
     feed = root.createElement('feed')
     root.appendChild(feed)
 
-    for aid in aids:
-        print(aid)
+    # for aid in aids:
+    #     print(aid)
 
     for aid in aids:
         if not aid:
             continue
+        # print(aid)
         if db_flixhq.isin(aid):
             #print(aid)
             a=aids[aid]['response']

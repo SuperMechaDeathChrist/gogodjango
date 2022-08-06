@@ -23,6 +23,8 @@ from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
 apiconsu='https://rokuconsumet.herokuapp.com'
+gittoken="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"
+gitrepo="SuperMechaDeathChrist/gogodjango"
 
 def pathargs(**d):
     ans='?'
@@ -431,20 +433,14 @@ def update_fav_anime():
     print('+'*20)
     print('updating fav anime')
     print('+'*20)
-    aids=db.load()
+    # aids=db.load()
+    aids=db.github_download(gittoken,gitrepo,save=True)
     if len(aids)<2:
         aids=['accel-world-dub',
-            'overlord-iv',
-            'https://gogoanime.lu/category/dungeon-ni-deai-wo-motomeru-no-wa-machigatteiru-darou-ka-iv',
-            'high-school-dxd-dub',#12
-            'https://gogoanime.gg/category/high-school-dxd-new-dub',#13
-            'https://gogoanime.gg/category/high-school-dxd-born-dub',#15
-            'high-school-dxd-hero-dub',#18
-            'https://gogoanime.gg/category/high-school-dxd-specials-ova',
-            'https://gogoanime.gg/category/high-school-dxd-specials',
-            'https://gogoanime.gg/category/highschool-dxd-born-specials'
-            'https://gogoanime.gg/category/highschool-dxd-born-yomigaerarenai-pheonix']
+            'overlord-iv']
     for aid in aids:
+        if not aid:
+            continue
         if '/category/' in aid:
             aid=aid.split('/category/')[-1]
         r=rq.get(apiurl+'/anime-details/'+aid)
@@ -455,17 +451,20 @@ def update_fav_anime():
         db.add(aid,dict(
             response=a,
             ))
+    db.github_save(db.load(),gittoken,gitrepo)
 
 def update_fav_series():
     print('+'*20)
     print('updating fav series')
     print('+'*20)
-    aids=db_flixhq.load()
+    aids=db_flixhq.github_download(gittoken,gitrepo,save=True)
     if len(aids)<2:
         aids=[
         'tv/watch-love-death-and-robots-42148'
         ]
     for aid in aids:
+        if not aid:
+            continue
         r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
         a=r.json()
 
@@ -473,36 +472,54 @@ def update_fav_series():
         db_flixhq.add(aid,dict(
             response=a,
             ))
+    db_flixhq.github_save(db.load(),gittoken,gitrepo)
 
 
 def addto_fav_anime(request,aid):
     try:
+        if not aid:
+            raise ValueError
         r=rq.get(apiurl+'/anime-details/'+aid)
         a=r.json()
-        db.add(aid,
-            dict(response=a)
-            )
-        if request: return HttpResponse("Success: added "+aid)
+        # db.add(aid,
+        #     dict(response=a)
+        #     )
+        db.github_add(aid,dict(response=a),gittoken,gitrepo)
+
+        if request:
+            return HttpResponse("Success: added "+aid)
+        else:
+            print("Success: added "+aid)
+
     except:
-        if request: return HttpResponse("Failiure: not added "+aid)
+        if request:
+            return HttpResponse("Failiure: not added "+aid)
+        else:
+            print("Failiure: not added "+aid)
 def addto_fav_series(request,ctype,id):
     try:
 
         aid=ctype+'/'+id
         r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
         a=r.json()        
-        db_flixhq.add(aid,dict(
-            response=a,
-            ))
+        # db_flixhq.add(aid,dict(
+        #     response=a,
+        #     ))
+        db_flixhq.github_add(aid,dict(response=a),gittoken,gitrepo)
         if request: return HttpResponse("Success: added "+aid)
     except:
         if request: return HttpResponse("Failiure: not added "+aid)
 def removefrom_fav_anime(request,aid):
-    if db.remove(aid):
+    if db.github_remove(aid,gittoken,gitrepo):
         if request: return HttpResponse("Success: removed "+aid)
     else:
         if request: return HttpResponse("Failiure: not removed "+aid)
-
+def removefrom_fav_series(request,ctype,id):
+    aid=ctype+'/'+id
+    if db_flixhq.github_remove(aid,gittoken,gitrepo):
+        if request: return HttpResponse("Success: removed "+aid)
+    else:
+        if request: return HttpResponse("Failiure: not removed "+aid)
 
 def get_flixhq_ep(request):
     eid=request.GET.get('eid', None)
@@ -511,8 +528,8 @@ def get_flixhq_ep(request):
         # ?eid=939832&aid=tv%2Fwatch-love-death-and-robots-42148
         eid=request.GET.get('eid', None)
         aid=request.GET.get('aid', None)
-        print(eid)
-        print(aid)
+        # print(eid)
+        # print(aid)
         er=rq.get(apiconsu+'/movies/flixhq/watch'+pathargs(episodeId=eid,server='vidcloud',mediaId=aid))
         erj=er.json()
         stream_url=erj['sources'][0]['url']

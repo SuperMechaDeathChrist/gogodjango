@@ -1,10 +1,16 @@
+dbpath='db_flixhq.dat'
+
 import pickle
+from github import Github
 import unicodedata
 from difflib import get_close_matches, ndiff
 from difflib import SequenceMatcher
 import os
+import time
+from datetime import datetime
 
-dbpath='db_flixhq.dat'
+
+
 
 def strip_accents(s):
    return ''.join(c for c in unicodedata.normalize('NFD', s)
@@ -59,6 +65,63 @@ class CaseInsensitiveDict(dict):
 def load():
     return pickle.load(open(dbpath,'rb'))
 
+def github_download(token,repo,save=True):
+    g = Github(token)
+    try:
+        repo = g.get_repo(repo)
+    except:
+        return
+    contents = repo.get_contents(dbpath)
+    s=contents.decoded_content
+    dbo=pickle.loads(s)
+    dbo['']['sha']=contents.sha
+    if save:
+        save(dbo)
+    return dbo
+def github_get_sha(token,repo):
+    try:
+        return load()['']['sha']
+    except:
+        g = Github(token)
+        try:
+            repo = g.get_repo(repo)
+        except:
+            return ''
+        contents = repo.get_contents(dbpath)
+        return contents.sha
+
+def github_save(dbo,token,repo):
+    g = Github(token)
+    try:
+        repo = g.get_repo(repo)
+    except:
+        repo=None
+
+    try:
+        ans=repo.update_file(dbpath,str(datetime.now()),pickle.dumps(dbo),github_get_sha(token,repo))
+    except:
+        try:
+            ans=repo.create_file(dbpath, str(datetime.now()), pickle.dumps(dbo))
+        except:
+            contents = repo.get_contents(dbpath)
+            ans=repo.update_file(dbpath,str(datetime.now()),pickle.dumps(dbo),contents.sha)
+    dbo['']['sha']=ans['commit'].sha
+def github_add(key,value,token,repo):
+    dbo=github_download(token,repo,save=False)
+    dbo[key]=value
+    # dbo['']['edited']=time.time()
+    # save(dbo)
+    github_save(dbo,key,value)
+
+def github_remove(key,token,repo):
+    dbo=github_download(token,repo,save=False)
+    try:
+        dbo.pop(key)
+        github_save(dbo,token,repo)
+        return dbo
+    except:
+        return None
+
 def printdb(exclude=()):
 
     dbo=load()
@@ -85,15 +148,17 @@ def save(dbo):
 def add(key,value):
     dbo=load()
     dbo[key]=value
+    # dbo['']['edited']=time.time()
     save(dbo)
+
 def remove(key):
     dbo=load()
     try:
         dbo.pop(key)
         save(dbo)
-        return True
+        return dbo
     except:
-        return False
+        return None
 def isin(key,strip_accent=False):
     if strip_accents:
         key=strip_accents(key)
@@ -101,8 +166,13 @@ def isin(key,strip_accent=False):
 
 def wipe():
     dbo=CaseInsensitiveDict()
-    dbo['']=''
+    dbo['']={'edited':time.time(),'saved':time.time()}
     save(dbo)
+
+def _reset_time_meta_():
+    dbo=load()
+    dbo['']={'edited':time.time(),'saved':time.time()}
+    save(dbo)    
 
 # # printdb()
 # add('hell',[-1,2,3])
@@ -136,7 +206,7 @@ def search(s):
 
     # print('x'*20)
     # print(closest)
-    return closest
+    return closest,dbo[closest]
 
 if not os.path.exists(dbpath):
     wipe()

@@ -65,7 +65,7 @@ class CaseInsensitiveDict(dict):
 def load():
     return pickle.load(open(dbpath,'rb'))
 
-def github_download(token,repo,save=True):
+def github_download(token,repo,do_save=True):
     g = Github(token)
     try:
         repo = g.get_repo(repo)
@@ -75,7 +75,7 @@ def github_download(token,repo,save=True):
     s=contents.decoded_content
     dbo=pickle.loads(s)
     dbo['']['sha']=contents.sha
-    if save:
+    if do_save:
         save(dbo)
     return dbo
 def github_get_sha(token,repo):
@@ -106,15 +106,16 @@ def github_save(dbo,token,repo):
             contents = repo.get_contents(dbpath)
             ans=repo.update_file(dbpath,str(datetime.now()),pickle.dumps(dbo),contents.sha)
     dbo['']['sha']=ans['commit'].sha
+    save(dbo)
 def github_add(key,value,token,repo):
-    dbo=github_download(token,repo,save=False)
+    dbo=github_download(token,repo,do_save=False)
     dbo[key]=value
     # dbo['']['edited']=time.time()
     # save(dbo)
-    github_save(dbo,key,value)
+    github_save(dbo,token,repo)
 
 def github_remove(key,token,repo):
-    dbo=github_download(token,repo,save=False)
+    dbo=github_download(token,repo,do_save=False)
     try:
         dbo.pop(key)
         github_save(dbo,token,repo)

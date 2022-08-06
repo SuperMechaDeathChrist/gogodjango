@@ -9,6 +9,7 @@ import re
 import random
 import unicodedata
 import rklpy_lib as rk
+import traceback
 
 from xml.dom import minidom
 
@@ -441,7 +442,7 @@ def update_fav_anime():
     print('updating fav anime')
     print('+'*20)
     # aids=db.load()
-    aids=db.github_download(gittoken,gitrepo,save=True)
+    aids=db.github_download(gittoken,gitrepo,do_save=True)
     if len(aids)<2:
         aids=['accel-world-dub',
             'overlord-iv']
@@ -464,7 +465,7 @@ def update_fav_series():
     print('+'*20)
     print('updating fav series')
     print('+'*20)
-    aids=db_flixhq.github_download(gittoken,gitrepo,save=True)
+    aids=db_flixhq.github_download(gittoken,gitrepo,do_save=True)
     if len(aids)<2:
         aids=[
         'tv/watch-love-death-and-robots-42148'
@@ -505,16 +506,23 @@ def addto_fav_anime(request,aid):
             print("Failiure: not added "+aid)
 def addto_fav_series(request,ctype,id):
     try:
-
+        if not ctype or not id:
+            raise ValueError
         aid=ctype+'/'+id
+        print('<>'*30)
+        print(aid)
         r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
         a=r.json()        
         # db_flixhq.add(aid,dict(
         #     response=a,
         #     ))
+        print('<>'*30)
+        print(type(a),'a')
+        print(gittoken,gitrepo)
         db_flixhq.github_add(aid,dict(response=a),gittoken,gitrepo)
         if request: return HttpResponse("Success: added "+aid)
     except:
+        traceback.print_exc()
         if request: return HttpResponse("Failiure: not added "+aid)
 def removefrom_fav_anime(request,aid):
     if db.github_remove(aid,gittoken,gitrepo):

@@ -480,7 +480,7 @@ def update_fav_series():
         db_flixhq.add(aid,dict(
             response=a,
             ))
-    db_flixhq.github_save(db.load(),gittoken,gitrepo)
+    db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
 
 
 def addto_fav_anime(request,aid):
@@ -509,16 +509,16 @@ def addto_fav_series(request,ctype,id):
         if not ctype or not id:
             raise ValueError
         aid=ctype+'/'+id
-        print('<>'*30)
-        print(aid)
+        # print('<>'*30)
+        # print(aid)
         r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
         a=r.json()        
         # db_flixhq.add(aid,dict(
         #     response=a,
         #     ))
-        print('<>'*30)
-        print(type(a),'a')
-        print(gittoken,gitrepo)
+        # print('<>'*30)
+        # print(type(a),'a')
+        # print(gittoken,gitrepo)
         db_flixhq.github_add(aid,dict(response=a),gittoken,gitrepo)
         if request: return HttpResponse("Success: added "+aid)
     except:

@@ -15,6 +15,7 @@ urlpatterns = [
     path('recent_anime_chinese/',views.recent_anime_chinese),
     path('favorite_anime/',views.favorite_anime),
     path('favorite_series/',views.favorite_series),
+    path('favorite_movies/',views.favorite_movies),
     path('addto_fav_anime/<str:aid>/',views.addto_fav_anime),
     path('addto_fav_series/<str:ctype>/<str:id>',views.addto_fav_series),
     path('removefrom_fav_anime/<str:aid>/',views.removefrom_fav_anime)

@@ -318,6 +318,7 @@ def categories(request):
     <category title="Favorites" description="Series/movies" sd_img="pkg:/images/Favorites.png" hd_img="pkg:/images/Favorites.png">
         <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
         <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
+        <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_movies/"/>
     </category>
  </categories>
 '''
@@ -559,7 +560,10 @@ def get_flixhq_ep(request):
     return HttpResponse(request.path)
 
 def favorite_series(request):
-    dj=request.build_absolute_uri().replace(request.path,'')
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
     base_url=dj+'/polls/get_flixhq_ep/'
     
     aids=db_flixhq.load()
@@ -568,11 +572,8 @@ def favorite_series(request):
     feed = root.createElement('feed')
     root.appendChild(feed)
 
-    # for aid in aids:
-    #     print(aid)
-
     for aid in aids:
-        if not aid:
+        if not aid or aid[0:2]!='tv':
             continue
         # print(aid)
         if db_flixhq.isin(aid):
@@ -609,6 +610,62 @@ def favorite_series(request):
                 title='S'+str(e['season']).rjust(2,'0')+e['title'],
                 url=base_url+pathargs(eid=e['id'],aid=aid)
                 ))
+    xml_str = root.toprettyxml(indent ="  ") 
+    return HttpResponse(xml_str,content_type='text/xml')
+
+def favorite_movies(request):
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+    base_url=dj+'/polls/get_flixhq_ep/'
+    
+    aids=db_flixhq.load()
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+
+    for aid in aids:
+        if not aid or aid[0:2]=='tv':
+            continue
+        # print(aid)
+        if db_flixhq.isin(aid):
+            #print(aid)
+            a=aids[aid]['response']
+            # print(a)
+        else:
+            r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+            a=r.json()        
+        title=rk.titlexml(a['title'])
+        thumbnail=a['image']
+
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',title)
+        addto(root,item,'contentId',aid)
+        addto(root,item,'contentType','Episode')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','hls')
+        media=addto(root,item,'media')
+        addto(root,media,'streamUrl',base_url+pathargs(eid=a['episodes'][0]['id'],aid=aid))
+        # season=addto(root,media,'season',None)
+        desc='Released: '+a['releaseDate']
+
+        addto(root,item,'synopsis',
+            desc
+            )
+        addto(root,item,'genres',', '.join(a['genres']))
+
+        # for e in a['episodes']:
+        #     addto(root,season,'episode',attr=dict(
+        #         # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
+        #         title='S'+str(e['season']).rjust(2,'0')+e['title'],
+        #         url=base_url+pathargs(eid=e['id'],aid=aid)
+        #         ))
     xml_str = root.toprettyxml(indent ="  ") 
     return HttpResponse(xml_str,content_type='text/xml')
 

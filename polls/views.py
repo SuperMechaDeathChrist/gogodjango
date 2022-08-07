@@ -318,7 +318,7 @@ def categories(request):
     <category title="Favorites" description="Series/movies" sd_img="pkg:/images/Favorites.png" hd_img="pkg:/images/Favorites.png">
         <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
         <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
-        <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_movies/"/>
+        <categoryLeaf title="Favorite Movies" description="" feed="{dj}/polls/favorite_movies/"/>
     </category>
  </categories>
 '''

@@ -523,18 +523,27 @@ def update_fav_anime():
     if len(aids)<2:
         aids=['accel-world-dub',
             'overlord-iv']
+    ts=[]
     for aid in aids:
         if not aid:
             continue
         if '/category/' in aid:
             aid=aid.split('/category/')[-1]
         if aids[aid]['response']['status']=='Ongoing':
-            r=rq.get(apiurl+'/anime-details/'+aid)
-            a=r.json()        
-            db.add(aid,dict(
-                response=a,
-                ))
+            def ti():
+                curl=apiurl+'/anime-details/'+aid
+                r=rq.get(curl)
+                a=r.json()        
+                db.add(aid,dict(
+                    response=a,
+                    ))
+                print(curl)
+            ts.append(threading.Thread(target=ti))
+            ts[-1].start()
+    for tti in ts:
+        tti.join()
     db.github_save(db.load(),gittoken,gitrepo)
+    print('db updatet to github')
 
 def update_fav_series():
     print('+'*20)
@@ -545,28 +554,49 @@ def update_fav_series():
         aids=[
         'tv/watch-love-death-and-robots-42148'
         ]
+
+    ts=[]
     for aid in aids:
         if not aid:
             continue
-        r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
-        a=r.json()
+        try:
+            if aid[0:6]=='movie/':
+                continue
+        except:
+            pass
+        def ti():
+        # if True:
+            curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
+            r=rq.get(curl)
+            a=r.json()
+            db_flixhq.add(aid,dict(
+                response=a,
+                ))
+            print(curl)
+        # ti()
+        ts.append(threading.Thread(target=ti))
+        ts[-1].start()
+    for tti in ts:
+        tti.join()
 
-        # ia.search_movie(a['title'])
-        db_flixhq.add(aid,dict(
-            response=a,
-            ))
     db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
+    print('db_flixhq updatet to github')
 
-
+def addto_fav_anime_full_url(request,trash,aid):
+    return addto_fav_anime(request,aid)
 def addto_fav_anime(request,aid):
     try:
         if not aid:
+            raise ValueError
+        if len(aid)>6 and aid[0:6]=='watch-' and aid[-1].isnumeric():
             raise ValueError
         r=rq.get(apiurl+'/anime-details/'+aid)
         a=r.json()
         # db.add(aid,
         #     dict(response=a)
         #     )
+        if 'error' in a:
+            raise ValueError
         db.github_add(aid,dict(response=a),gittoken,gitrepo)
 
         if request:
@@ -579,6 +609,12 @@ def addto_fav_anime(request,aid):
             return HttpResponse("Failiure: not added "+aid)
         else:
             print("Failiure: not added "+aid)
+
+# def addto_fav(request,aid):
+#     if not aid:
+#         raise ValueError
+
+
 def addto_fav_series(request,ctype,id):
     try:
         if not ctype or not id:

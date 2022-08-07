@@ -3,7 +3,7 @@ from django.urls import reverse
 import requests as rq
 import threading
 # Create your views here.
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import json
 import re
 import random
@@ -189,7 +189,24 @@ def get_ep(request,ep):
     else:
         stream_r=rq.get(apiurl+'/vidcdn/watch/'+ep)
         streamj=stream_r.json()
-        stream_url=streamj['sources'][0]['file']
+        if not 'error' in streamj:
+            stream_url=streamj['sources'][0]['file']
+        else:
+            epn=ep.split('-')[-1]
+            aid=ep.replace('-episode-'+epn,'')
+            aids=db.load()
+            try:
+                a=aids[aid]['response']
+            except:
+                r=rq.get(apiurl+'/anime-details/'+aid)
+                a=r.json()
+            for e in a['episodesList']:
+                nepn=e['episodeId'].split('-')[-1]
+                if nepn==epn:
+                    stream_r=rq.get(apiurl+'/vidcdn/watch/'+e['episodeId'])
+                    streamj=stream_r.json()
+                    stream_url=streamj['sources'][0]['file']
+                    break
 
         return redirect(stream_url,permanent=True)
 
@@ -311,36 +328,36 @@ def categories(request):
 
      <category title="Anime" description="Gogoanime" sd_img="pkg:/images/gogoanime.jpg" hd_img="pkg:/images/gogoanime.jpg">
         <categoryLeaf title="-Recent release-" description="" feed="{dj}/polls/recent_anime/"/>
+        <categoryLeaf title="Top airing" description="" feed="{dj}/polls/top_airing_anime/"/>
         <categoryLeaf title="DUB" description="" feed="{dj}/polls/recent_anime_dub/"/>
-        <categoryLeaf title="CHINESE" description="" feed="{dj}/polls/recent_anime_dub/"/>
+        <categoryLeaf title="CHINESE" description="" feed="{dj}/polls/recent_anime_chinese/"/>
     </category>
     
-    <category title="Favorites" description="Series/movies" sd_img="pkg:/images/Favorites.png" hd_img="pkg:/images/Favorites.png">
-        <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
-        <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
+    <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Favorites.png" hd_img="pkg:/images/Favorites.png">
         <categoryLeaf title="Favorite Movies" description="" feed="{dj}/polls/favorite_movies/"/>
+        <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
+    </category>
+    <category title="Favorite Animes" description="Animes/OVAs/Anime movies" sd_img="pkg:/images/Favorite_anime" hd_img="pkg:/images/Favorite_anime.png">
+        <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
     </category>
  </categories>
 '''
     return HttpResponse(ans,content_type='text/xml')
 
 def recent_gogo(dj,rtype='/recent-release'):
-    # dj=request.build_absolute_uri().replace(request.path,'')
-    root = minidom.Document()
-    feed = root.createElement('feed')
-    # rss.setAttribute('xmlns:media',"http://search.yahoo.com/mrss/") 
-    # rss.setAttribute('version','2.0')
-    root.appendChild(feed)
-    # addto(root,feed,'resultLength','4')
     r=rq.get(apiurl+rtype)
     rj=r.json()
+
+    base_url=dj+'/polls/get_ep/'
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
     for a in rj:
         title=rk.titlexml(a['animeTitle'])
         desc='Epidose '+a['episodeNum']
         url=dj+'/polls/get_ep/'+a['episodeId']
         thumbnail=a['animeImg']
-
-        # item=root.createElement('item',attr)
         item=addto(root,feed,'item',attr=dict(
             sdImg=thumbnail,
             hdImg=thumbnail
@@ -351,16 +368,20 @@ def recent_gogo(dj,rtype='/recent-release'):
         addto(root,item,'contentType','Episode')
         addto(root,item,'contentQuality','HD')
         addto(root,item,'streamFormat','hls')
-        media=root.createElement('media')
-        item.appendChild(media)
-        addto(root,media,'streamUrl',url)
         addto(root,item,'synopsis',desc)
         addto(root,item,'genres',a['subOrDub'])
-
-
+        
+        media=addto(root,item,'media')
+        addto(root,media,'streamUrl',base_url+'test')
+        season=addto(root,media,'season',None)
+        # for e in reversed(a['episodesList']):
+        for e in get_anime_episode_list(a):
+            addto(root,season,'episode',attr=dict(
+                title='Episode '+e['episodeNum'],
+                url=base_url+e['episodeId']
+                ))
 
     xml_str = root.toprettyxml(indent ="  ") 
-    # return HttpResponse(xml_str,content_type='text/xml')
     return xml_str
 
 def recent_anime(request):
@@ -373,6 +394,63 @@ def recent_anime_dub(request):
 def recent_anime_chinese(request):
     dj=request.build_absolute_uri().replace(request.path,'')
     return HttpResponse(recent_gogo(dj,rtype='/recent-release?type=3'),content_type='text/xml')
+
+def get_anime_episode_list(rj):
+    if 'episodesList' in rj:
+        return rj['episodesList']
+    elif 'latestEp' in rj:
+        lep=int(rj['latestEp'].split()[-1])
+        return ({'episodeNum':str(i),'episodeId':rj['animeId']+'-episode-'+str(i)} for i in range(lep,0,-1))
+    elif "episodeNum" in rj:
+        lep=int(rj['episodeNum'])
+        return ({'episodeNum':str(i),'episodeId':rj['animeId']+'-episode-'+str(i)} for i in range(lep,0,-1))
+
+        # return ({} )
+
+def test(request):
+    # https://gogo4rokuapi.herokuapp.com
+    dj=request.build_absolute_uri().replace(request.path,'')
+    base_url=dj+'/polls/get_ep/'
+    rtype='/top-airing'
+    r=rq.get(apiurl+rtype)
+    rj=r.json()
+    # return HttpResponse('test')
+    # return JsonResponse(rj)
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    for a in rj:
+        title=rk.titlexml(a['animeTitle'])
+        # desc='Epidose '+a['episodeNum']
+        desc=a['latestEp']
+        url=dj+'/polls/get_ep/test'
+        thumbnail=a['animeImg']
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',desc+' - '+title)
+        addto(root,item,'contentId',a['animeId']+'-'+a['latestEp'].lower().replace(' ','-'))
+        addto(root,item,'contentType','Episode')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','hls')
+        addto(root,item,'synopsis',desc)
+        addto(root,item,'genres',', '.join(a['genres']))
+        
+        media=addto(root,item,'media')
+        addto(root,media,'streamUrl',base_url+'test')
+        season=addto(root,media,'season',None)
+        # for e in reversed(a['episodesList']):
+        for e in get_anime_episode_list(a):
+            addto(root,season,'episode',attr=dict(
+                title='Episode '+e['episodeNum'],
+                url=base_url+e['episodeId']
+                ))
+
+    xml_str = root.toprettyxml(indent ="  ")
+    return HttpResponse(xml_str,content_type='text/xml')
 
 def favorite_anime(request):
     dj=request.build_absolute_uri().replace(request.path,'')
@@ -389,13 +467,13 @@ def favorite_anime(request):
             continue
         if '/category/' in aid:
             aid=aid.split('/category/')[-1]
-        if db.isin(aid):
-            #print(aid)
+        try:
+        # if db.isin(aid):
             a=aids[aid]['response']
-            # print(a)
-        else:
+        except:
+        # else:
             r=rq.get(apiurl+'/anime-details/'+aid)
-            a=r.json()        
+            a=r.json()
 
         title=rk.titlexml(a['animeTitle'])
         thumbnail=a['animeImg']
@@ -410,14 +488,12 @@ def favorite_anime(request):
         addto(root,item,'contentType','Season')
         addto(root,item,'contentQuality','HD')
         addto(root,item,'streamFormat','hls')
+        addto(root,item,'synopsis',a['synopsis'])
+        addto(root,item,'genres',['SUB','DUB'][bool(aid[-3:].lower()=='dub')])
+
         media=addto(root,item,'media')
         addto(root,media,'streamUrl',base_url+'test')
         season=addto(root,media,'season',None)
-        addto(root,item,'synopsis',
-            a['synopsis']
-            )
-        addto(root,item,'genres',['SUB','DUB'][bool(aid[-3:].lower()=='dub')])
-
         for e in reversed(a['episodesList']):
             addto(root,season,'episode',attr=dict(
                 title='Episode '+e['episodeNum'],
@@ -452,14 +528,12 @@ def update_fav_anime():
             continue
         if '/category/' in aid:
             aid=aid.split('/category/')[-1]
-        r=rq.get(apiurl+'/anime-details/'+aid)
-        a=r.json()        
-
-        # title=rk.titlexml(a['animeTitle'])
-        # thumbnail=a['animeImg']
-        db.add(aid,dict(
-            response=a,
-            ))
+        if aids[aid]['response']['status']=='Ongoing':
+            r=rq.get(apiurl+'/anime-details/'+aid)
+            a=r.json()        
+            db.add(aid,dict(
+                response=a,
+                ))
     db.github_save(db.load(),gittoken,gitrepo)
 
 def update_fav_series():
@@ -576,11 +650,13 @@ def favorite_series(request):
         if not aid or aid[0:2]!='tv':
             continue
         # print(aid)
-        if db_flixhq.isin(aid):
+        # if db_flixhq.isin(aid):
+        try:
             #print(aid)
             a=aids[aid]['response']
             # print(a)
-        else:
+        except:
+        # else:
             r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
             a=r.json()        
         title=rk.titlexml(a['title'])
@@ -630,11 +706,12 @@ def favorite_movies(request):
         if not aid or aid[0:2]=='tv':
             continue
         # print(aid)
-        if db_flixhq.isin(aid):
+        # if db_flixhq.isin(aid):
+        try:
             #print(aid)
             a=aids[aid]['response']
             # print(a)
-        else:
+        except:
             r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
             a=r.json()        
         title=rk.titlexml(a['title'])

@@ -1,16 +1,20 @@
-# import db_flixhq
-# import db
+import requests
+import db_flixhq
+import db
+from cryptography.fernet import Fernet
+key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
+encMessage=b'gAAAAABi7tt3uuCl4P2d_m1JpvKUZuTBK7SMGuJqlJVRTIhsFhUFjLCe_kf2veI7iWNuEZpT2jCYhJE7MBhV990S4fu4iS81zpb29e41MAleVgIdZT6xSe5y6kcfTzkM_MW81n9cU08O'
+fernet = Fernet(key)
+gittoken = fernet.decrypt(encMessage).decode()
 
-# # db_flixhq.printdb()
-# # k=db_flixhq.search('love death robots')
-# # # print(db_flixhq.load()[a])
-# # a=db_flixhq.load()[k]['response']
-# # for e in a['episodes']:
-# # 	print('S'+str(e['season']).rjust(2,'0')+'e'+str(e['number']).rjust(2,'0'))
-# # 	# print(format(e['season'],r'2.0f'))
-# # 	print(e)
+gitrepo="SuperMechaDeathChrist/gogodjango"
 
-# # # print(', '.join(['Animation', 'Sci-Fi', 'Fantasy']))
-
-# for k in db_flixhq.load():
-# 	print(k)
+# dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
+dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
+for k in dbo:
+	if k:
+		# print(k,dbo[k]['response']['episodes'])
+		# print('\n'*10)
+		# http://192.168.0.34:3000/polls/addto_fav
+		r=requests.get('http://192.168.0.34:3000/polls/addto_fav/'+k)
+		print(r.text)

@@ -520,9 +520,9 @@ def update_fav_anime():
     print('+'*20)
     # aids=db.load()
     aids=db.github_download(gittoken,gitrepo,do_save=True)
-    if len(aids)<2:
-        aids=['accel-world-dub',
-            'overlord-iv']
+    # if len(aids)<2:
+    #     aids=['accel-world-dub',
+    #         'overlord-iv']
     ts=[]
     for aid in aids:
         if not aid:
@@ -530,7 +530,8 @@ def update_fav_anime():
         if '/category/' in aid:
             aid=aid.split('/category/')[-1]
         if aids[aid]['response']['status']=='Ongoing':
-            def ti():
+            # def ti():
+            if True:
                 curl=apiurl+'/anime-details/'+aid
                 r=rq.get(curl)
                 a=r.json()        
@@ -538,10 +539,10 @@ def update_fav_anime():
                     response=a,
                     ))
                 print(curl)
-            ts.append(threading.Thread(target=ti))
-            ts[-1].start()
-    for tti in ts:
-        tti.join()
+            # ts.append(threading.Thread(target=ti))
+            # ts[-1].start()
+    # for tti in ts:
+    #     tti.join()
     db.github_save(db.load(),gittoken,gitrepo)
     print('db updatet to github')
 
@@ -550,10 +551,10 @@ def update_fav_series():
     print('updating fav series')
     print('+'*20)
     aids=db_flixhq.github_download(gittoken,gitrepo,do_save=True)
-    if len(aids)<2:
-        aids=[
-        'tv/watch-love-death-and-robots-42148'
-        ]
+    # if len(aids)<2:
+    #     aids=[
+    #     'tv/watch-love-death-and-robots-42148'
+    #     ]
 
     ts=[]
     for aid in aids:
@@ -564,8 +565,8 @@ def update_fav_series():
                 continue
         except:
             pass
-        def ti():
-        # if True:
+        # def ti():
+        if True:
             curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
             r=rq.get(curl)
             a=r.json()
@@ -574,10 +575,10 @@ def update_fav_series():
                 ))
             print(curl)
         # ti()
-        ts.append(threading.Thread(target=ti))
-        ts[-1].start()
-    for tti in ts:
-        tti.join()
+    #     ts.append(threading.Thread(target=ti))
+    #     ts[-1].start()
+    # for tti in ts:
+    #     tti.join()
 
     db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
     print('db_flixhq updatet to github')

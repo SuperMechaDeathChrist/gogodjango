@@ -515,6 +515,8 @@ def get_anime(request,aid):
     xml_str = root.toprettyxml(indent ="  ") 
     return HttpResponse(xml_str,content_type='text/xml')
 
+series_results={}
+anime_results={}
 def _down_response(curl,aid,dbid):
     global series_results,anime_results
     #
@@ -535,6 +537,7 @@ def _down_response(curl,aid,dbid):
 
 
 def update_fav_anime():
+    global anime_results
     print('+'*20)
     print('updating fav anime')
     print('+'*20)
@@ -552,22 +555,22 @@ def update_fav_anime():
         if aids[aid]['response']['status']=='Ongoing':
             # def ti():
             if True:
-                curl=apiurl+'/anime-details/'+aid
-                r=rq.get(curl)
-                a=r.json()        
-                db.add(aid,dict(
-                    response=a,
-                    ))
-                print(curl)
-            # ts.append(threading.Thread(target=ti))
-            # ts[-1].start()
-    # for tti in ts:
-    #     tti.join()
+                # curl=apiurl+'/anime-details/'+aid
+                # r=rq.get(curl)
+                # a=r.json()        
+                # db.add(aid,dict(
+                #     response=a,
+                #     ))
+                # print(curl)
+                ts.append(threading.Thread(target=_down_response,args=(apiurl+'/anime-details/'+aid,aid,'gogoanime',)))
+                ts[-1].start()
+    for tti in ts:
+        tti.join()
+    for k in anime_results:
+        db.add(k,anime_results[k])
     db.github_save(db.load(),gittoken,gitrepo)
     print('db updated to github')
-
-series_results={}
-anime_results={}
+    anime_results={}
 def update_fav_series():
     global series_results
     print('+'*20)

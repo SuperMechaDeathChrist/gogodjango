@@ -515,6 +515,24 @@ def get_anime(request,aid):
     xml_str = root.toprettyxml(indent ="  ") 
     return HttpResponse(xml_str,content_type='text/xml')
 
+def _down_response(curl,aid,dbid):
+    global series_results,anime_results
+    try:
+        # curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
+        # print(curl)
+        r=rq.get(curl)
+        a=r.json()
+
+        if dbid=='flixhq':
+            series_results[aid]=dict(response=a)
+        elif dbid=='gogoanime':
+            anime_results[aid]=dict(response=a)
+        print(curl)
+    except:
+        traceback.print_exc()
+
+
+
 def update_fav_anime():
     print('+'*20)
     print('updating fav anime')
@@ -547,7 +565,10 @@ def update_fav_anime():
     db.github_save(db.load(),gittoken,gitrepo)
     print('db updated to github')
 
+series_results={}
+anime_results={}
 def update_fav_series():
+    global series_results
     print('+'*20)
     print('updating fav series')
     print('+'*20)
@@ -568,25 +589,27 @@ def update_fav_series():
             pass
         # def ti():
         if True:
-            try:
-                curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
-                # print(curl)
-                r=rq.get(curl)
-                a=r.json()
-                db_flixhq.add(aid,dict(
-                    response=a,
-                    ))
-                print(curl)
-            except:
-                traceback.print_exc()
+            # try:
+            #     curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
+            #     r=rq.get(curl)
+            #     a=r.json()
+            #     db_flixhq.add(aid,dict(
+            #         response=a,
+            #         ))
+            #     print(curl)
+            # except:
+            #     traceback.print_exc()
         # ti()
-    #     ts.append(threading.Thread(target=ti))
-    #     ts[-1].start()
-    # for tti in ts:
-    #     tti.join()
+            ts.append(threading.Thread(target=_down_response,args=(apiconsu+'/movies/flixhq/info'+pathargs(id=aid),aid,'flixhq',)))
+            ts[-1].start()
+    for tti in ts:
+        tti.join()
 
+    for k in series_results:
+        db_flixhq.add(k,series_results[k])
     db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
     print('db_flixhq updated to github')
+    series_results={}
 
 def addto_fav_anime_full_url(request,trash,aid):
     return addto_fav_anime(request,aid)

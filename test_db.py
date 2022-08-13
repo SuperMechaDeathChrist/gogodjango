@@ -9,12 +9,13 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 
-# dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
-dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
+dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
+#dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
 for k in dbo:
 	if k:
 		# print(k,dbo[k]['response']['episodes'])
 		# print('\n'*10)
 		# http://192.168.0.34:3000/polls/addto_fav
-		r=requests.get('http://192.168.0.34:3000/polls/addto_fav/'+k)
-		print(r.text)
+		# r=requests.get('http://192.168.0.34:3000/polls/addto_fav/'+k)
+		# print(r.text)
+		print(k,dbo[k]['response']['episodes'][0])

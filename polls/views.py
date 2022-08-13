@@ -23,7 +23,8 @@ import db_flixhq
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
-apiconsu='https://rokuconsumet.herokuapp.com'
+# apiconsu='https://rokuconsumet.herokuapp.com'
+apiconsu='https://consumet-api.herokuapp.com'
 
 from cryptography.fernet import Fernet
 key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
@@ -544,7 +545,7 @@ def update_fav_anime():
     # for tti in ts:
     #     tti.join()
     db.github_save(db.load(),gittoken,gitrepo)
-    print('db updatet to github')
+    print('db updated to github')
 
 def update_fav_series():
     print('+'*20)
@@ -567,13 +568,17 @@ def update_fav_series():
             pass
         # def ti():
         if True:
-            curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
-            r=rq.get(curl)
-            a=r.json()
-            db_flixhq.add(aid,dict(
-                response=a,
-                ))
-            print(curl)
+            try:
+                curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
+                # print(curl)
+                r=rq.get(curl)
+                a=r.json()
+                db_flixhq.add(aid,dict(
+                    response=a,
+                    ))
+                print(curl)
+            except:
+                traceback.print_exc()
         # ti()
     #     ts.append(threading.Thread(target=ti))
     #     ts[-1].start()
@@ -581,7 +586,7 @@ def update_fav_series():
     #     tti.join()
 
     db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
-    print('db_flixhq updatet to github')
+    print('db_flixhq updated to github')
 
 def addto_fav_anime_full_url(request,trash,aid):
     return addto_fav_anime(request,aid)

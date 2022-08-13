@@ -517,6 +517,7 @@ def get_anime(request,aid):
 
 def _down_response(curl,aid,dbid):
     global series_results,anime_results
+    #
     try:
         # curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
         # print(curl)

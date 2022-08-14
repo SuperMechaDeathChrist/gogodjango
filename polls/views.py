@@ -745,6 +745,7 @@ def get_flixhq_sub(request):
             ans=erj['subtitles'][0]['url']
             for sub in erj['subtitles']:
                 # print(sub)
+                
                 if 'eng' in sub['lang'].lower()[0:4]:
                     ans=sub['url']
                     break

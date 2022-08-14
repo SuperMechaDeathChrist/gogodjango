@@ -22,6 +22,7 @@ def convert_header(contents):
     return replacement
 
 
+
 def padding_timestamp(contents):
     """Add 00 to padding timestamp of to srt format
 

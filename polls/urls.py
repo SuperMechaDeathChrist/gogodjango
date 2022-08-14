@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('get_flixhq_ep/',views.get_flixhq_ep),
+    path('get_flixhq_sub/',views.get_flixhq_sub),
     path('get_ep/<str:ep>/',views.get_ep),
     # path('get_flixhq_ep<str:aid>/<str:eid>',views.get_flixhq_ep),
     path('get_feed/',views.get_feed),

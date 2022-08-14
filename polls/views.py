@@ -2,6 +2,7 @@ from django.shortcuts import render,redirect
 from django.urls import reverse
 import requests as rq
 import threading
+from vtt_to_srt import str_vtt_to_srt
 # Create your views here.
 from django.http import HttpResponse, JsonResponse
 import json
@@ -34,6 +35,8 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 #
+
+series_ep_cache={}
 
 def pathargs(**d):
     ans='?'
@@ -681,6 +684,7 @@ def removefrom_fav_series(request,ctype,id):
         if request: return HttpResponse("Failiure: not removed "+aid)
 
 def get_flixhq_ep(request):
+    global series_ep_cache
     eid=request.GET.get('eid', None)
     aid=request.GET.get('aid', None)
     if eid and aid:
@@ -689,16 +693,79 @@ def get_flixhq_ep(request):
         aid=request.GET.get('aid', None)
         # print(eid)
         # print(aid)
-        er=rq.get(apiconsu+'/movies/flixhq/watch'+pathargs(episodeId=eid,server='vidcloud',mediaId=aid))
+
+        url_args=pathargs(episodeId=eid,server='vidcloud',mediaId=aid)
+
+        er=rq.get(apiconsu+'/movies/flixhq/watch'+url_args)
         erj=er.json()
         stream_url=erj['sources'][0]['url']
+
+        try:
+            ans=erj['subtitles'][0]['url']
+            for sub in erj['subtitles']:
+                # print(sub)
+                if 'eng' in sub['lang'].lower()[0:4]:
+                    ans=sub['url']
+                    break
+            vtt=rq.get(ans)
+            ans=str_vtt_to_srt(vtt.text)
+            series_ep_cache[url_args]=ans
+        except:
+            series_ep_cache[url_args]=''
 
         return redirect(stream_url,permanent=True)
     else:
         url='http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
         return redirect(url,permanent=True)
 
+    return HttpResponse(request.path)
 
+def get_flixhq_sub(request):
+    global series_ep_cache
+    eid=request.GET.get('eid', None)
+    aid=request.GET.get('aid', None)
+    if eid and aid:
+        # ?eid=939832&aid=tv%2Fwatch-love-death-and-robots-42148
+        # eid=request.GET.get('eid', None)
+        # aid=request.GET.get('aid', None)
+        # print(eid)
+        # print(aid)
+
+        url_args=pathargs(episodeId=eid,server='vidcloud',mediaId=aid)
+
+        if url_args in series_ep_cache:
+            # return redirect(series_ep_cache[url_args],permanent=True)
+            return HttpResponse(series_ep_cache[url_args])
+
+        er=rq.get(apiconsu+'/movies/flixhq/watch'+url_args)
+        erj=er.json()
+        stream_url=erj['sources'][0]['url']
+
+        try:            
+            ans=erj['subtitles'][0]['url']
+            for sub in erj['subtitles']:
+                # print(sub)
+                if 'eng' in sub['lang'].lower()[0:4]:
+                    ans=sub['url']
+                    break
+            vtt=rq.get(ans)
+            ans=str_vtt_to_srt(vtt.text)
+            series_ep_cache[url_args]=ans
+        except:
+            series_ep_cache[url_args]=''
+
+        # return redirect(stream_url,permanent=True)
+        if series_ep_cache[url_args]:
+            # return redirect(series_ep_cache[url_args],permanent=True)
+            return HttpResponse(series_ep_cache[url_args])
+        else:
+            return HttpResponse(request.path)
+    else:
+        ans="https://cc.1clickcdn.ru/05/61/05617ecfaaf725ef9a7bec67913a532b/eng-2.vtt"
+        vtt=rq.get(ans)
+        ans=str_vtt_to_srt(vtt.text)
+        # return redirect(ans,permanent=True)
+        return HttpResponse(ans)
 
     return HttpResponse(request.path)
 
@@ -743,6 +810,7 @@ def favorite_series(request):
         addto(root,item,'streamFormat','hls')
         media=addto(root,item,'media')
         addto(root,media,'streamUrl',base_url)
+        addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/')
         season=addto(root,media,'season',None)
         addto(root,item,'synopsis',
             ''
@@ -750,10 +818,12 @@ def favorite_series(request):
         addto(root,item,'genres',', '.join(a['genres']))
 
         for e in a['episodes']:
+            url_args=pathargs(eid=e['id'],aid=aid)
             addto(root,season,'episode',attr=dict(
                 # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
                 title='S'+str(e['season']).rjust(2,'0')+e['title'],
-                url=base_url+pathargs(eid=e['id'],aid=aid)
+                url=base_url+url_args,
+                subs=dj+'/polls/get_flixhq_sub/'+url_args
                 ))
     xml_str = root.toprettyxml(indent ="  ") 
     return HttpResponse(xml_str,content_type='text/xml')
@@ -797,7 +867,9 @@ def favorite_movies(request):
         addto(root,item,'contentQuality','HD')
         addto(root,item,'streamFormat','hls')
         media=addto(root,item,'media')
-        addto(root,media,'streamUrl',base_url+pathargs(eid=a['episodes'][0]['id'],aid=aid))
+        url_args=pathargs(eid=a['episodes'][0]['id'],aid=aid)
+        addto(root,media,'streamUrl',base_url+url_args)
+        addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/'+url_args)
         # season=addto(root,media,'season',None)
         desc='Released: '+a['releaseDate']
 

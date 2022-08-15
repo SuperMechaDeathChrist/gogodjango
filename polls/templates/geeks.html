@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Homepage</title>
+</head>
+<body>
+    <h1>Welcome to Geeksforgeeks this is a test.</h1>
+
+<form type="get" action="." style="margin: 0">
+    <input  id="search_box" type="text" name="search_box"  placeholder="Search..." >
+    <button id="search_submit" type="submit" >Submit</button>
+</form>
+ 
+ 
+<p> Data  is {{  data }}</p>
+ 
+ 
+ 
+    <h4>List is </h4>
+    <ul>
+    {% for k,value in list.items %}
+    <li>{{ k }}</li>
+    <img src="{{value}}">
+
+    {% endfor %}
+</body>
+</html>

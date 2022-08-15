@@ -4,6 +4,10 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('search/', views.search_series, name='index'),
+    path('search_anime/', views.search_anime, name='index'),
+    path('search_series/', views.search_series, name='index'),
+
     path('get_flixhq_ep/',views.get_flixhq_ep),
     path('get_flixhq_sub/',views.get_flixhq_sub),
     path('get_ep/<str:ep>/',views.get_ep),
@@ -16,6 +20,10 @@ urlpatterns = [
     path('recent_anime_dub/',views.recent_anime_dub),
     path('recent_anime_chinese/',views.recent_anime_chinese),
     path('favorite_anime/',views.favorite_anime),
+
+    path('last_query_animes/',views.last_query_animes),
+    path('last_query_series/',views.last_query_series),
+
     path('top_airing_anime/',views.test),
     path('favorite_series/',views.favorite_series),
     path('favorite_movies/',views.favorite_movies),
@@ -28,6 +36,11 @@ urlpatterns = [
     path('addto_fav/https://flixhq.to/<str:ctype>/<str:id>',views.addto_fav_series),
     # https://gogoanime.lu/category/berserk-2016-dub
     path('addto_fav/https://gogoanime.<str:trash>/category/<str:aid>',views.addto_fav_anime_full_url),
+
+    path('removefrom_fav/<str:aid>/',views.removefrom_fav_anime),
+    path('removefrom_fav/<str:ctype>/<str:id>',views.removefrom_fav_series),
+    path('removefrom_fav/https://flixhq.to/<str:ctype>/<str:id>',views.removefrom_fav_series),
+    path('removefrom_fav/https://gogoanime.<str:trash>/category/<str:aid>',views.removefrom_fav_anime_full_url),    
 
     path('removefrom_fav_anime/<str:aid>/',views.removefrom_fav_anime),
     path('removefrom_fav_series/<str:ctype>/<str:id>',views.removefrom_fav_series)

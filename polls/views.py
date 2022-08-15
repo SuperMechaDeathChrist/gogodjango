@@ -12,6 +12,8 @@ import unicodedata
 import rklpy_lib as rk
 import traceback
 
+from api.settings import last_query,series_ep_cache
+
 from xml.dom import minidom
 
 # import imdb
@@ -35,8 +37,6 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 #
-
-series_ep_cache={}
 
 def pathargs(**d):
     ans='?'
@@ -177,6 +177,118 @@ def fill_anime(a,id=randstr(),base_url='',videoType='MP4'):
 
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
+  
+# create a function
+def search_anime(request):
+    global last_query
+    # create a dictionary to pass
+    # data to the template
+    last_query['animes']={}
+    search_query=''
+    if request.method == 'GET': # If the form is submitted
+        search_query = request.GET.get('search_box', None)
+        an={}
+        ts=[]
+        st=[]
+        cs=[]
+        fs=[]
+        nfs=[]
+        if search_query:
+            print(search_query)
+            # queryurl=apiurl+'/search'+pathargs(keyw=search_query)
+            queryurl=apiconsu+'/anime/gogoanime/'+rq.utils.quote(search_query,safe='')
+            # print(queryurl)
+            q=rq.get(queryurl)
+            qj=q.json()
+            # dj=request.build_absolute_uri().replace(request.path,'')
+            # if '?' in dj:
+            #     dj=dj.split('?')[0]
+            # base_url=dj+'/polls/'
+            if 'results' in qj:
+                for qi in qj['results']:
+                    # ts.append(qi['animeTitle'])
+                    # st.append('['+qi['status']+']')
+                    # cs.append(qi['animeImg'])
+                    # fs.append('../addto_fav/'+qi['animeId'])
+                    # nfs.append('../removefrom_fav/'+qi['animeId'])
+
+                    ts.append(qi['title'])
+                    st.append('['+qi['releaseDate']+']')
+                    cs.append(qi['image'])
+                    fs.append('../addto_fav/'+qi['id'])
+                    nfs.append('../removefrom_fav/'+qi['id'])
+
+                    last_query['animes'][qi['id']]=qi['title']
+
+
+
+
+    context ={
+        #"data":"Gfg is the best",
+        'nrslts':len(ts),
+        'smode':'Search Anime',
+        'lastq':search_query,
+        'list':zip(ts,st,cs,fs,nfs),
+    }
+
+    # return response with template and context
+    # return render(request, "geeks.html", context)
+    # print(last_query['animes'])
+    return render(request, "search.html",context)
+
+def search_series(request):
+    global last_query
+    # create a dictionary to pass
+    # data to the template
+    search_query=''
+    last_query['series']={}
+    if request.method == 'GET': # If the form is submitted
+        search_query = request.GET.get('search_box', None)
+        an={}
+        ts=[]
+        st=[]
+        cs=[]
+        fs=[]
+        nfs=[]
+        if search_query:
+            print(search_query)
+            # queryurl=apiurl+'/search'+pathargs(keyw=search_query)
+            queryurl=apiconsu+'/movies/flixhq/'+rq.utils.quote(search_query,safe='')
+            print(queryurl)
+            q=rq.get(queryurl)
+            qj=q.json()
+            # dj=request.build_absolute_uri().replace(request.path,'')
+            # if '?' in dj:
+            #     dj=dj.split('?')[0]
+            # base_url=dj+'/polls/'
+            if 'results' in qj:
+                for qi in qj['results']:
+                    # an.append({'title':qi['animeTitle'],'img':qi["animeImg"]})
+                    # an[qi['animeTitle']+'\n'+qi['status']]=qi["animeImg"]
+                    ts.append(qi['title'])
+                    if 'releaseDate' in qi:
+                        st.append('['+qi['type']+' - '+qi['releaseDate']+']')
+                    else:
+                        st.append('['+qi['type']+']')
+                    cs.append(qi['image'])
+                    fs.append('../addto_fav/'+qi['id'])
+                    nfs.append('../removefrom_fav/'+qi['id'])
+
+                    last_query['series'][qi['id']]=qi['title']
+
+
+
+
+    context ={
+        #"data":"Gfg is the best",
+        'smode':'Search Movies/TV',
+        'nrslts':len(ts),
+        'lastq':search_query,
+        'list':zip(ts,st,cs,fs,nfs),
+    }
+    # return response with template and context
+    # return render(request, "geeks.html", context)
+    return render(request, "search.html",context)    
 
 def get_ep(request,ep):
     #http://127.0.0.1:8000/polls/get_ep/test/
@@ -344,6 +456,10 @@ def categories(request):
     <category title="Favorite Animes" description="Animes/OVAs/Anime movies" sd_img="pkg:/images/Favorite_anime" hd_img="pkg:/images/Favorite_anime.png">
         <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
     </category>
+    <category title="Search" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
+        <categoryLeaf title="Last searched animes" description="" feed="{dj}/polls/last_query_animes/"/>
+        <categoryLeaf title="Last searched series" description="" feed="{dj}/polls/last_query_series/"/>
+    </category>
  </categories>
 '''
     return HttpResponse(ans,content_type='text/xml')
@@ -507,6 +623,61 @@ def favorite_anime(request):
     xml_str = root.toprettyxml(indent ="  ") 
     return HttpResponse(xml_str,content_type='text/xml')
 
+
+def last_query_animes(request):
+    global last_query
+    dj=request.build_absolute_uri().replace(request.path,'')
+    base_url=dj+'/polls/get_ep/'
+
+    aids=db.load()
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+
+    for aid in last_query['animes']:
+        if not aid:
+            continue
+        if '/category/' in aid:
+            aid=aid.split('/category/')[-1]
+        try:
+        # if db.isin(aid):
+            a=aids[aid]['response']
+        except:
+        # else:
+            r=rq.get(apiurl+'/anime-details/'+aid)
+            a=r.json()
+
+        title=rk.titlexml(a['animeTitle'])
+        thumbnail=a['animeImg']
+
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',title)
+        addto(root,item,'contentId',aid)
+        addto(root,item,'contentType','Season')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','hls')
+        addto(root,item,'synopsis',a['synopsis'])
+        addto(root,item,'genres',['SUB','DUB'][bool(aid[-3:].lower()=='dub')])
+
+        media=addto(root,item,'media')
+        addto(root,media,'streamUrl',base_url+'test')
+        season=addto(root,media,'season',None)
+        for e in reversed(a['episodesList']):
+            addto(root,season,'episode',attr=dict(
+                title='Episode '+e['episodeNum'],
+                # text='Episode '+e['episodeNum'],
+                url=base_url+e['episodeId']
+                ))
+    xml_str = root.toprettyxml(indent ="  ") 
+    return HttpResponse(xml_str,content_type='text/xml')
+
+
+
 def get_anime(request,aid):
     dj=request.build_absolute_uri().replace(request.path,'')
     base_url=dj+'/polls/get_ep/'
@@ -620,6 +791,9 @@ def update_fav_series():
 
 def addto_fav_anime_full_url(request,trash,aid):
     return addto_fav_anime(request,aid)
+def removefrom_fav_anime_full_url(request,trash,aid):
+    return removefrom_fav_anime(request,aid)
+
 def addto_fav_anime(request,aid):
     try:
         if not aid:
@@ -636,20 +810,82 @@ def addto_fav_anime(request,aid):
         db.github_add(aid,dict(response=a),gittoken,gitrepo)
 
         if request:
-            return HttpResponse("Success: added "+aid)
+            # return HttpResponse("Success: added "+aid)
+            return HttpResponse(_html_added('Success!','added',aid))
         else:
             print("Success: added "+aid)
+            return True,aid
 
     except:
         if request:
-            return HttpResponse("Failiure: not added "+aid)
+            # return HttpResponse("Failiure: not added "+aid)
+            return HttpResponse(_html_added('Failiure!','not added',aid))
         else:
             print("Failiure: not added "+aid)
+            return False, aid
 
 # def addto_fav(request,aid):
 #     if not aid:
 #         raise ValueError
 
+def _html_added(ans,added,aid,urlback='../../search'):
+    s='''
+<html>
+<body text="#ffffff" style=" background-color: black;">
+<head>
+    <meta charset = "utf-8">
+    <title>GeeksforGeeks Example</title>
+
+    <!--CSS Code-->
+    <style media = "screen">
+        body {
+            background: orange;
+            overflow: hidden;
+            color: white;
+        }
+        .GeeksForGeeks {
+            text-align: center;
+            background: #282923;
+            font-size: 3.5vw;
+            position: absolute;
+            top: 1%;
+            left: 1%;
+            right: 1%;
+        }
+    </style>
+</head>
+ <div class = "GeeksForGeeks">
+    '''
+    # s+='Power up command sent to '+aid+'!<br>'
+    # ans='Success!' if success else 'Failiure!'
+    if 'added' in added:
+        added='<span style="background-color: #1D7948; color: white; ">'+added+'</span>'
+        tofav=' to favorites.'
+    else:
+        added='<span style="background-color: #B12020; color: white; ">'+added+'</span>'
+        tofav=' from favorites.'
+
+    if not 'r' in ans:
+        ans='<span style="background-color: #1D7948; color: white; ">'+ans+'</span>'
+    else:
+        ans='<span style="background-color: #B12020; color: white; ">'+ans+'</span>'
+
+
+    s+=ans+':<br>'+added+' '+aid+tofav
+    #ans=send_magic_packet_git_dummy(pc)
+    s+='<br>'
+    # if ans=='Success!':
+    #     s+='Check TeamViewer and wait for the computer to log on.<br>'
+    s+='<br>Returning in 3 seconds...'
+    s+='</div>'
+    #s+='<meta http-equiv="refresh" content="4;url='+urlback+'" />'
+    s+=r'''<script language="JavaScript" type="text/javascript">
+        setTimeout("window.history.go(-1)",3000);
+</script>
+    '''
+    s+='</body></html>'
+
+    return s
 
 def addto_fav_series(request,ctype,id):
     try:
@@ -667,21 +903,27 @@ def addto_fav_series(request,ctype,id):
         # print(type(a),'a')
         # print(gittoken,gitrepo)
         db_flixhq.github_add(aid,dict(response=a),gittoken,gitrepo)
-        if request: return HttpResponse("Success: added "+aid)
+        # if request: return HttpResponse("Success: added "+aid)
+        if request: return HttpResponse(_html_added('Success!','added',aid))
     except:
         traceback.print_exc()
-        if request: return HttpResponse("Failiure: not added "+aid)
+        # if request: return HttpResponse("Failiure: not added "+aid)
+        if request: return HttpResponse(_html_added('Failiure!','not added',aid))
 def removefrom_fav_anime(request,aid):
     if db.github_remove(aid,gittoken,gitrepo):
-        if request: return HttpResponse("Success: removed "+aid)
+        # if request: return HttpResponse("Success: removed "+aid)
+        if request: return HttpResponse(_html_added('Success!','removed',aid))
     else:
-        if request: return HttpResponse("Failiure: not removed "+aid)
+        # if request: return HttpResponse("Failiure: not removed "+aid)
+        if request: return HttpResponse(_html_added('Failiure!','not removed',aid))
 def removefrom_fav_series(request,ctype,id):
     aid=ctype+'/'+id
     if db_flixhq.github_remove(aid,gittoken,gitrepo):
-        if request: return HttpResponse("Success: removed "+aid)
+        # if request: return HttpResponse("Success: removed "+aid)
+        if request: return HttpResponse(_html_added('Success!','removed',aid))
     else:
-        if request: return HttpResponse("Failiure: not removed "+aid)
+        # if request: return HttpResponse("Failiure: not removed "+aid)
+        if request: return HttpResponse(_html_added('Failiure!','not removed',aid))
 
 def get_flixhq_ep(request):
     global series_ep_cache
@@ -770,6 +1012,7 @@ def get_flixhq_sub(request):
 
     return HttpResponse(request.path)
 
+
 def favorite_series(request):
     if request:
         dj=request.build_absolute_uri().replace(request.path,'')
@@ -795,7 +1038,8 @@ def favorite_series(request):
         except:
         # else:
             r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
-            a=r.json()        
+            a=r.json()
+
         title=rk.titlexml(a['title'])
         thumbnail=a['image']
 
@@ -885,6 +1129,95 @@ def favorite_movies(request):
         #         title='S'+str(e['season']).rjust(2,'0')+e['title'],
         #         url=base_url+pathargs(eid=e['id'],aid=aid)
         #         ))
+    xml_str = root.toprettyxml(indent ="  ") 
+    return HttpResponse(xml_str,content_type='text/xml')
+
+
+def last_query_series(request):
+    global last_query
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+    base_url=dj+'/polls/get_flixhq_ep/'
+    
+    aids=db_flixhq.load()
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+
+    for aid in last_query['series']:
+        if not aid:
+            continue
+        istv=True if aid[0:2]=='tv' else False
+        # print(aid)
+        # if db_flixhq.isin(aid):
+        try:
+            #print(aid)
+            a=aids[aid]['response']
+            # print(a)
+        except:
+            r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+            a=r.json()
+
+        if istv:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Season')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            addto(root,media,'streamUrl',base_url)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/')
+            season=addto(root,media,'season',None)
+            addto(root,item,'synopsis',
+                ''
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+            for e in a['episodes']:
+                url_args=pathargs(eid=e['id'],aid=aid)
+                addto(root,season,'episode',attr=dict(
+                    # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
+                    title='S'+str(e['season']).rjust(2,'0')+e['title'],
+                    url=base_url+url_args,
+                    subs=dj+'/polls/get_flixhq_sub/'+url_args
+                    ))
+        else:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Episode')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            url_args=pathargs(eid=a['episodes'][0]['id'],aid=aid)
+            addto(root,media,'streamUrl',base_url+url_args)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/'+url_args)
+            # season=addto(root,media,'season',None)
+            desc='Released: '+a['releaseDate']
+
+            addto(root,item,'synopsis',
+                desc
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
     xml_str = root.toprettyxml(indent ="  ") 
     return HttpResponse(xml_str,content_type='text/xml')
 

@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 from django.shortcuts import render,redirect
 from django.urls import reverse
 import requests as rq
@@ -18,9 +20,6 @@ from xml.dom import minidom
 
 # import imdb
 # ia = imdb.Cinemagoer()
-
-import sys
-sys.path.append('../')
 import db
 import db_flixhq
 from db import CaseInsensitiveDict

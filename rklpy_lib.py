@@ -201,11 +201,11 @@ def ensure_dir2(directory):
 ##________________PENDING FUNCTIONS_______________##
 def titlexml( str ):
     #eliminate the already in xml format
-    str = str.replace("&amp;", "&")
-    str = str.replace("&lt;", "<")
-    str = str.replace("&gt;", ">")
-    str = str.replace("&quot;", "\"")
-    str = str.replace('\'', '&apos;')
+    # str = str.replace("&amp;", "&")
+    # str = str.replace("&lt;", "<")
+    # str = str.replace("&gt;", ">")
+    # str = str.replace("&quot;", "\"")
+    # str = str.replace('\'', '&apos;')
     #end eliminate the already in xml format
     str = str.replace("&", "&amp;")
     str = str.replace("<", "&lt;")
@@ -213,16 +213,16 @@ def titlexml( str ):
     str = str.replace("\"", "&quot;")
     str = str.replace('\'', '&apos;')
     
-    str=regexrepi('[^ 0-9a-zñ&;,.//?¿!¡=)(_:-]','*',str)
-    # nnt=''
-    # for c in str:
-    #     rep=c.encode("unicode_escape").decode('utf-8')
-    #     if len(rep)>1:
-    #         # print(c,repr(rep),rep[2:])
-    #         nnt+='&#'+rep[2:]+';'
-    #     else:
-    #         nnt+=c
-    # str=nnt
+    # str=regexrepi('[^ 0-9a-zñ&;,.//?¿!¡=)(_:-]','*',str)
+    nnt=''
+    for c in str:
+        rep=c.encode("unicode_escape").decode('utf-8')
+        if len(rep)>1:
+            # print(c,repr(rep),rep[2:])
+            nnt+='&#'+rep[2:]+';'
+        else:
+            nnt+=c
+    str=nnt
 
     return str
 

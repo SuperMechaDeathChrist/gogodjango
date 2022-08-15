@@ -479,9 +479,11 @@ def categories(request):
     <category title="Favorite Animes" description="Animes/OVAs/Anime movies" sd_img="pkg:/images/Favorite_anime" hd_img="pkg:/images/Favorite_anime.png">
         <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
     </category>
-    <category title="Search" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
-        <categoryLeaf title="Last searched animes" description="" feed="{dj}/polls/last_query_animes/"/>
+    <category title="Search movies" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
         <categoryLeaf title="Last searched series" description="" feed="{dj}/polls/last_query_series/"/>
+    </category>
+    <category title="Search animes" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
+        <categoryLeaf title="Last searched animes" description="" feed="{dj}/polls/last_query_animes/"/>
     </category>
  </categories>
 '''

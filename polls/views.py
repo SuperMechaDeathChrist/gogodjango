@@ -178,6 +178,19 @@ def fill_anime(a,id=randstr(),base_url='',videoType='MP4'):
 def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
   
+def _down_query_response(curl,aid,dbid):
+    global last_query
+    #
+    try:
+        # curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
+        # print(curl)
+        r=rq.get(curl)
+        a=r.json()
+        last_query[dbid][aid]=dict(response=a)
+        print(curl)
+    except:
+        traceback.print_exc()
+
 # create a function
 def search_anime(request):
     global last_query
@@ -218,7 +231,12 @@ def search_anime(request):
                     fs.append('../addto_fav/'+qi['id'])
                     nfs.append('../removefrom_fav/'+qi['id'])
 
-                    last_query['animes'][qi['id']]=qi['title']
+                    last_query['animes'][qi['id']]=False
+                    threading.Thread(target=_down_query_response,args=(
+                        apiurl+'/anime-details/'+aid,
+                        qi['id'],
+                        'animes',
+                        )).start()
 
 
 
@@ -274,7 +292,12 @@ def search_series(request):
                     fs.append('../addto_fav/'+qi['id'])
                     nfs.append('../removefrom_fav/'+qi['id'])
 
-                    last_query['series'][qi['id']]=qi['title']
+                    last_query['series'][qi['id']]=False
+                    threading.Thread(target=_down_query_response,args=(
+                        apiconsu+'/movies/flixhq/info'+pathargs(id=aid),
+                        qi['id'],
+                        'series',
+                        )).start()
 
 
 
@@ -644,9 +667,11 @@ def last_query_animes(request):
         # if db.isin(aid):
             a=aids[aid]['response']
         except:
-        # else:
-            r=rq.get(apiurl+'/anime-details/'+aid)
-            a=r.json()
+            try:
+                a=last_query['animes'][aid]['response']
+            except:
+                r=rq.get(apiurl+'/anime-details/'+aid)
+                a=r.json()
 
         title=rk.titlexml(a['animeTitle'])
         thumbnail=a['animeImg']
@@ -1158,8 +1183,11 @@ def last_query_series(request):
             a=aids[aid]['response']
             # print(a)
         except:
-            r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
-            a=r.json()
+            try:
+                a=last_query['series'][aid]['response']
+            except:
+                r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                a=r.json()
 
         if istv:
             title=rk.titlexml(a['title'])

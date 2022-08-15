@@ -233,7 +233,7 @@ def search_anime(request):
 
                     last_query['animes'][qi['id']]=False
                     threading.Thread(target=_down_query_response,args=(
-                        apiurl+'/anime-details/'+aid,
+                        apiurl+'/anime-details/'+qi['id'],
                         qi['id'],
                         'animes',
                         )).start()
@@ -294,7 +294,7 @@ def search_series(request):
 
                     last_query['series'][qi['id']]=False
                     threading.Thread(target=_down_query_response,args=(
-                        apiconsu+'/movies/flixhq/info'+pathargs(id=aid),
+                        apiconsu+'/movies/flixhq/info'+pathargs(id=qi['id']),
                         qi['id'],
                         'series',
                         )).start()

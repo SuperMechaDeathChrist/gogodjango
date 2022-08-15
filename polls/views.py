@@ -525,7 +525,7 @@ def recent_gogo(dj,rtype='/recent-release'):
                 url=base_url+e['episodeId']
                 ))
 
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
     return xml_str
 
 def recent_anime(request):
@@ -593,7 +593,7 @@ def test(request):
                 url=base_url+e['episodeId']
                 ))
 
-    xml_str = root.toprettyxml(indent ="  ")
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
     return HttpResponse(xml_str,content_type='text/xml')
 
 def favorite_anime(request):
@@ -644,7 +644,7 @@ def favorite_anime(request):
                 # text='Episode '+e['episodeNum'],
                 url=base_url+e['episodeId']
                 ))
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
     return HttpResponse(xml_str,content_type='text/xml')
 
 
@@ -699,7 +699,7 @@ def last_query_animes(request):
                 # text='Episode '+e['episodeNum'],
                 url=base_url+e['episodeId']
                 ))
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
     return HttpResponse(xml_str,content_type='text/xml')
 
 
@@ -712,7 +712,7 @@ def get_anime(request,aid):
     root.appendChild(feed)
 
 
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
 
 series_results={}
@@ -1096,7 +1096,7 @@ def favorite_series(request):
                 url=base_url+url_args,
                 subs=dj+'/polls/get_flixhq_sub/'+url_args
                 ))
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
 
 def favorite_movies(request):
@@ -1155,7 +1155,7 @@ def favorite_movies(request):
         #         title='S'+str(e['season']).rjust(2,'0')+e['title'],
         #         url=base_url+pathargs(eid=e['id'],aid=aid)
         #         ))
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
 
 
@@ -1247,7 +1247,7 @@ def last_query_series(request):
                 )
             addto(root,item,'genres',', '.join(a['genres']))
 
-    xml_str = root.toprettyxml(indent ="  ") 
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
 
 # db.wipe()

@@ -22,6 +22,7 @@ from xml.dom import minidom
 # ia = imdb.Cinemagoer()
 import db
 import db_flixhq
+import db_query
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
@@ -36,6 +37,8 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 #
+
+last_query=db_query.github_download(gittoken,gitrepo)
 
 def pathargs(**d):
     ans='?'
@@ -179,6 +182,7 @@ def index(request):
   
 def _down_query_response(curl,aid,dbid):
     global last_query
+    # last_query=db_query.github_download(gittoken,)
     #
     try:
         # curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
@@ -311,6 +315,7 @@ def search_fav_anime(request):
 
 def search_anime(request):
     global last_query
+    # last_query=db_query.github_download(gittoken,gitrepo)
     # create a dictionary to pass
     # data to the template
     last_query['animes']={}
@@ -369,6 +374,7 @@ def search_anime(request):
     # return response with template and context
     # return render(request, "geeks.html", context)
     # print(last_query['animes'])
+    threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
     return render(request, "search.html",context)
 
 def search_series(request):
@@ -428,6 +434,7 @@ def search_series(request):
     }
     # return response with template and context
     # return render(request, "geeks.html", context)
+    threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
     return render(request, "search.html",context)    
 
 def get_ep(request,ep):
@@ -1276,7 +1283,7 @@ def favorite_movies(request):
 
 
 def last_query_series(request):
-    global last_query
+    # global last_query
     if request:
         dj=request.build_absolute_uri().replace(request.path,'')
     else:

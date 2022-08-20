@@ -28,10 +28,13 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 # 	if k:
 # 		print(k,dbo[k]['response']['episodes'][0])
 
-import db_query
+# import db_query
 
-db_query.wipe()
-dbo=db_query.load()
-dbo['series']={}
-dbo['animes']={}
-db_query.github_save(dbo,gittoken,gitrepo)
+# db_query.wipe()
+# dbo=db_query.load()
+# dbo['series']={}
+# dbo['animes']={}
+# db_query.github_save(dbo,gittoken,gitrepo)
+
+# dbo=db_query.github_download(gittoken,gitrepo)
+# print(dbo)

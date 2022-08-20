@@ -359,8 +359,7 @@ def search_anime(request):
                         qi['id'],
                         'animes',
                         )).start()
-
-
+                threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
 
 
     context ={
@@ -374,7 +373,6 @@ def search_anime(request):
     # return response with template and context
     # return render(request, "geeks.html", context)
     # print(last_query['animes'])
-    threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
     return render(request, "search.html",context)
 
 def search_series(request):
@@ -422,6 +420,8 @@ def search_series(request):
                         'series',
                         )).start()
 
+                threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
+
 
 
 
@@ -434,7 +434,6 @@ def search_series(request):
     }
     # return response with template and context
     # return render(request, "geeks.html", context)
-    threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
     return render(request, "search.html",context)    
 
 def get_ep(request,ep):

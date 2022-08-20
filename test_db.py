@@ -1,13 +1,14 @@
 # import requests
 # import db_flixhq
 # import db
-# from cryptography.fernet import Fernet
-# key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
-# encMessage=b'gAAAAABi7tt3uuCl4P2d_m1JpvKUZuTBK7SMGuJqlJVRTIhsFhUFjLCe_kf2veI7iWNuEZpT2jCYhJE7MBhV990S4fu4iS81zpb29e41MAleVgIdZT6xSe5y6kcfTzkM_MW81n9cU08O'
-# fernet = Fernet(key)
-# gittoken = fernet.decrypt(encMessage).decode()
 
-# gitrepo="SuperMechaDeathChrist/gogodjango"
+from cryptography.fernet import Fernet
+key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
+encMessage=b'gAAAAABi7tt3uuCl4P2d_m1JpvKUZuTBK7SMGuJqlJVRTIhsFhUFjLCe_kf2veI7iWNuEZpT2jCYhJE7MBhV990S4fu4iS81zpb29e41MAleVgIdZT6xSe5y6kcfTzkM_MW81n9cU08O'
+fernet = Fernet(key)
+gittoken = fernet.decrypt(encMessage).decode()
+
+gitrepo="SuperMechaDeathChrist/gogodjango"
 
 # dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
 # #dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
@@ -26,3 +27,8 @@
 # for k in dbo:
 # 	if k:
 # 		print(k,dbo[k]['response']['episodes'][0])
+
+import db_query
+
+db_query.wipe()
+db_query.github_save(db_query.load(),gittoken,gitrepo)

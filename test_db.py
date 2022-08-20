@@ -31,4 +31,7 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 import db_query
 
 db_query.wipe()
-db_query.github_save(db_query.load(),gittoken,gitrepo)
+dbo=db_query.load()
+dbo['series']={}
+dbo['animes']={}
+db_query.github_save(dbo,gittoken,gitrepo)

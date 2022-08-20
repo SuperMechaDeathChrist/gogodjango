@@ -6,6 +6,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('search/', views.search_series, name='index'),
     path('search_anime/', views.search_anime, name='index'),
+    path('search_fav_series/', views.search_fav_series, name='index'),
+    path('search_fav_anime/', views.search_fav_anime, name='index'),
     path('search_series/', views.search_series, name='index'),
 
     path('get_flixhq_ep/',views.get_flixhq_ep),

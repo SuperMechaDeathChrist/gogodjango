@@ -190,7 +190,125 @@ def _down_query_response(curl,aid,dbid):
     except:
         traceback.print_exc()
 
-# create a function
+def search_fav_series(request):
+    sort='False'
+    view='all'
+    if request.method == 'GET': # If the form is submitted
+        ts=[]
+        st=[]
+        cs=[]
+        fs=[]
+        nfs=[]
+        aids=db_flixhq.load()
+        sort=request.GET.get('sort', None)
+        sort='False' if not sort else sort
+        
+        view=request.GET.get('view', None)
+        view='all' if not view else view
+
+        if sort=='False':
+            do=aids
+        else:
+            do=sorted(aids)
+        for aid in do:
+            if aid:
+                if view=='series' and aid[0:2]!='tv':
+                    continue
+                elif view=='movies' and aid[0:2]=='tv':
+                    continue
+
+                qi=aids[aid]['response']
+                ts.append(qi['title'])
+                st.append('['+qi['releaseDate']+']')
+                cs.append(qi['image'])
+                fs.append('../addto_fav/'+qi['id'])
+                nfs.append('../removefrom_fav/'+qi['id'])
+
+                # last_query['animes'][qi['id']]=False
+                # threading.Thread(target=_down_query_response,args=(
+                #     apiurl+'/anime-details/'+qi['id'],
+                #     qi['id'],
+                #     'animes',
+                #     )).start()
+    context ={
+        'smode':'Fav Series',
+        'sort':sort,
+        'view':view,
+        'list':zip(ts,st,cs,fs,nfs),
+    }
+    return render(request, "favs.html",context)
+def search_fav_anime(request):
+    sort='False'
+    view=None
+    if request.method == 'GET': # If the form is submitted
+        ts=[]
+        st=[]
+        cs=[]
+        fs=[]
+        nfs=[]
+        aids=db.load()
+        sort=request.GET.get('sort', None)
+        sort='False' if not sort else sort
+        
+        view=request.GET.get('view', None)
+        view='all' if not view else view
+
+        if sort=='False':
+            do=aids
+        else:
+            do=sorted(aids)
+        for aid in do:
+            if aid:
+                # if view=='series' and aid[0:2]!='tv':
+                #     continue
+                # elif view=='movies' and aid[0:2]=='tv':
+                #     continue
+
+                qi=aids[aid]['response']
+                # print(qi)
+                if view=='all':
+                    ts.append(qi['animeTitle'])
+                    st.append('['+qi['status']+']')
+                    cs.append(qi['animeImg'])
+                    fs.append('../addto_fav/'+aid)
+                    nfs.append('../removefrom_fav/'+aid)
+                elif view=='Dub':
+                    if not '(Dub)' in qi['animeTitle']:
+                        continue
+                    ts.append(qi['animeTitle'])
+                    st.append('['+qi['status']+']')
+                    cs.append(qi['animeImg'])
+                    fs.append('../addto_fav/'+aid)
+                    nfs.append('../removefrom_fav/'+aid)
+                elif view=='Sub':
+                    if '(Dub)' in qi['animeTitle']:
+                        continue
+                    ts.append(qi['animeTitle'])
+                    st.append('['+qi['status']+']')
+                    cs.append(qi['animeImg'])
+                    fs.append('../addto_fav/'+aid)
+                    nfs.append('../removefrom_fav/'+aid)
+
+                # ts.append(qi['title'])
+                # st.append('['+qi['releaseDate']+']')
+                # cs.append(qi['image'])
+                # fs.append('../addto_fav/'+qi['id'])
+                # nfs.append('../removefrom_fav/'+qi['id'])
+
+                # last_query['animes'][qi['id']]=False
+                # threading.Thread(target=_down_query_response,args=(
+                #     apiurl+'/anime-details/'+qi['id'],
+                #     qi['id'],
+                #     'animes',
+                #     )).start()
+    context ={
+        'smode':'Fav Anime',
+        'sort':sort,
+        'view':view,
+        'list':zip(ts,st,cs,fs,nfs),
+    }
+    return render(request, "favs.html",context)
+
 def search_anime(request):
     global last_query
     # create a dictionary to pass

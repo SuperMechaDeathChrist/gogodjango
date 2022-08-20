@@ -15,7 +15,7 @@
   <meta name="description" content="">
   
   
-  <title>Search</title>
+  <title>Favorites</title>
   <link rel="stylesheet" href="{% static 'assets/web/assets/mobirise-icons-bold/mobirise-icons-bold.css' %}">
   <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'assets/bootstrap/css/bootstrap-grid.min.css' %}">
@@ -56,13 +56,8 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
 
                 <ul class="navbar-nav nav-dropdown nav-right" data-app-modern-menu="true">
-                    {% if "Search Anime" in smode %}
                     <li class="nav-item"><a class="nav-link link text-white display-4" href="../search_series">FlixHQ</a></li>
-                    <li class="nav-item"><a class="nav-link link text-white display-4" href="./#top">GogoAnime</a></li>
-                    {% elif "Search Movies" %}
-                    <li class="nav-item"><a class="nav-link link text-white display-4" href="./#top">FlixHQ</a></li>
                     <li class="nav-item"><a class="nav-link link text-white display-4" href="../search_anime">GogoAnime</a></li>
-                    {% endif %}
                     
                     <li class="nav-item dropdown">
                         <a class="nav-link link text-white dropdown-toggle show display-4" href="https://mobiri.se" data-toggle="dropdown-submenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="true"><span class="mbrib-star mbr-iconfont mbr-iconfont-btn">
@@ -75,51 +70,56 @@
     </nav>
 </section>
 
-{% if "Search" in smode %}
 <section data-bs-version="5.1" class="content4 cid-tevPg7uDtD" id="content4-3">
     <div class="container">
         <div class="row justify-content-center">
             <div class="title col-md-12 col-lg-10">
-                <h3 class="mbr-section-title mbr-fonts-style align-center mb-4 display-4">
-                    <!-- <strong>Search:</strong> -->
-                    {% if "Search Anime" in smode %}
-                    <!-- <div class="mbr-section-btn align-center"> -->
-                        <a class="btn btn-white-outline display-4" href="../search_series">Movies/TV</a>
-                        <a class="btn btn-primary display-4" href="./#top">Anime</a>
-                    <!-- </div> -->
-                    {% else %}
-                    <!-- <div class="mbr-section-btn align-center"> -->
-                        <a class="btn btn-primary display-4" href="./#top">Movies/TV</a>
-                        <a class="btn btn-white-outline display-4" href="../search_anime">Anime</a>
-                    <!-- </div> -->
-                    {% endif %}
-                    <form type="get" action="." style="margin: 0">
-                        {% if lastq %}
-                        <input  id="search_box" type="text" name="search_box"  placeholder="Title..." value="{{lastq}}">
-                        {% else %}
-                        <input  id="search_box" type="text" name="search_box"  placeholder="Title...">
+                <!-- <h3 class="mbr-section-title mbr-fonts-style align-center mb-4 display-2"><strong>Search:</strong></h3> -->
+                
+                <div class="mbr-section-btn align-center">
+                    {% if "Fav Series" in smode %}
+                        {% if view == "all" %}
+                        <a class="btn btn-success display-4" href="./?sort={{sort}}&view=all">All</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=series">Series</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=movies">Movies</a>
+                        {% elif view == "series" %}
+                        <a class="btn btn-white-outline display-4"  href="./?sort={{sort}}&view=all">All</a>
+                        <a class="btn btn-success display-4" href="./?sort={{sort}}&view=series">Series</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=movies">Movies</a>
+                        {% elif view == "movies" %}
+                        <a class="btn btn-white-outline display-4"  href="./?sort={{sort}}&view=all">All</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=series">Series</a>
+                        <a class="btn btn-success display-4" href="./?sort={{sort}}&view=movies">Movies</a>
                         {% endif %}
-                        <button style="background-color: #141414; color: white;" id="search_submit" type="submit" >Search</button>
-                    </form>
-                </h3>
+                    {% else %}
+                        {% if view == "all" %}
+                        <a class="btn btn-success display-4" href="./?sort={{sort}}&view=all">All</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=Sub">Sub</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=Dub">Dub</a>
+                        {% elif view == "Sub" %}
+                        <a class="btn btn-white-outline display-4"  href="./?sort={{sort}}&view=all">All</a>
+                        <a class="btn btn-success display-4" href="./?sort={{sort}}&view=Sub">Sub</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=Dub">Dub</a>
+                        {% elif view == "Dub" %}
+                        <a class="btn btn-white-outline display-4"  href="./?sort={{sort}}&view=all">All</a>
+                        <a class="btn btn-white-outline display-4" href="./?sort={{sort}}&view=Sub">Sub</a>
+                        <a class="btn btn-success display-4" href="./?sort={{sort}}&view=Dub">Dub</a>
+                        {% endif %}
+                    {% endif %}
+                    {% if sort == "True" %}
+                    <a class="btn btn-warning display-4" href="./?view={{view}}&sort=False">
+                    <span class="mbrib-up-down mbr-iconfont mbr-iconfont-btn"></span>Sort</a>
+                    {% else %}
+                    <a class="btn btn-warning-outline display-4" href="./?view={{view}}&sort=True">
+                    <span class="mbrib-up-down mbr-iconfont mbr-iconfont-btn"></span>Sort</a>
+                    {% endif %}
+                </div>
                 
                 
             </div>
         </div>
     </div>
-    <!-- <div class="container">
-        <form type="get" action="." style="margin: 0">
-            {% if lastq %}
-            <input  id="search_box" type="text" name="search_box"  placeholder="Search..." value="{{lastq}}">
-            {% else %}
-            <input  id="search_box" type="text" name="search_box"  placeholder="Search...">
-            {% endif %}
-            <button style="background-color: #141414; color: white;" id="search_submit" type="submit" >Submit</button>
-
-        </form>
-    </div> -->
 </section>
-{% endif %}
 
 <section data-bs-version="5.1" class="gallery2 cid-tevOkSvBC2" id="gallery2-2">
     
@@ -176,54 +176,6 @@
             </div>
             {% endfor %}
             {% endif %}
-            <!-- <div class="item features-image сol-12 col-md-6 col-lg-4">
-                <div class="item-wrapper">
-                    <div class="item-img">
-                        <img src="{% static 'assets/images/features2.jpg' %}" alt="Mobirise Website Builder">
-                    </div>
-                    <div class="item-content">
-                        <h5 class="item-title mbr-fonts-style display-5">Create Site Today!</h5>
-                        
-                        
-                    </div>
-                    <div class="mbr-section-btn item-footer mt-2">
-                        <a href="" class="btn btn-primary item-btn display-7" target="_blank">Start
-                            Now!</a>
-                    </div>
-                </div>
-            </div>
-            <div class="item features-image сol-12 col-md-6 col-lg-4">
-                <div class="item-wrapper">
-                    <div class="item-img">
-                        <img src="{% static 'assets/images/features3.jpg' %}" alt="Mobirise Website Builder">
-                    </div>
-                    <div class="item-content">
-                        <h5 class="item-title mbr-fonts-style display-5">Create Site Today!</h5>
-                        
-                        
-                    </div>
-                    <div class="mbr-section-btn item-footer mt-2">
-                        <a href="" class="btn btn-primary item-btn display-7" target="_blank">Start
-                            Now!</a>
-                    </div>
-                </div>
-            </div>
-            <div class="item features-image сol-12 col-md-6 col-lg-4">
-                <div class="item-wrapper">
-                    <div class="item-img">
-                        <img src="{% static 'assets/images/features4.jpg' %}" alt="Mobirise Website Builder" title="">
-                    </div>
-                    <div class="item-content">
-                        <h5 class="item-title mbr-fonts-style display-5">Create Site Today!</h5>
-                        
-                        
-                    </div>
-                    <div class="mbr-section-btn item-footer mt-2">
-                        <a href="" class="btn btn-primary item-btn display-7" target="_blank">Start
-                            Now!</a>
-                    </div>
-                </div>
-            </div> -->
         </div>
     </div>
 </section><section class="display-7" style="padding: 0;align-items: center;justify-content: center;flex-wrap: wrap;    align-content: center;display: flex;position: relative;height: 4rem;"><a href="https://mobiri.se/1487176" style="flex: 1 1;height: 4rem;position: absolute;width: 100%;z-index: 1;"><img alt="" style="height: 4rem;" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="></a><p style="margin: 0;text-align: center;" class="display-7">Built with &#8204;</p><a style="z-index:1" href="https://mobirise.com"> Free Web  Creation Software</a></section><script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>  <script src="{% static 'assets/smoothscroll/smooth-scroll.js' %}"></script>  <script src="{% static 'assets/ytplayer/index.js' %}"></script>  <script src="{% static 'assets/dropdown/js/navbar-dropdown.js' %}"></script><script src="{% static 'assets/theme/js/script.js' %}"></script>  

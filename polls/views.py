@@ -1403,11 +1403,16 @@ def get_yt_stream(request,):
     if aid:
         print(aid)
         yv=pytube.YouTube('?v='+aid)
-        for st in yv.streams.filter(file_extension='mp4',progressive=True):
-            if st.mime_type=='video/mp4':
-                stream_url=st.url
-                # print(st)
-                # print(st.url)
+        try:
+            for st in yv.streams.filter(file_extension='mp4',progressive=True):
+                if st.mime_type=='video/mp4':
+                    stream_url=st.url
+        except:
+            r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+            rj=r.json()
+            for st in rj['formatStreams']:
+                if 'video/mp4' in st['type']:
+                    stream_url= st['url']
         threading.Thread(target=db_history.github_add,args=(aid,dict(source='youtube',episode=yv.video_id),gittoken,gitrepo,)).start()
         threading.Thread(target=db_yt_queue.github_remove,args=(aid,gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
@@ -1799,8 +1804,13 @@ def history_youtube(request):
         try:
             a=aids[aid]['response']
         except:
-            yv=pytube.YouTube('?v='+aid)
-            a=yv.vid_info['videoDetails']
+            yv=pytube.YouTube('?v='+dbo[aid]['episode'])
+            try:
+                a=yv.vid_info['videoDetails']
+            except:
+                # yv.bypass_age_gate()
+                a=yv.vid_info['videoDetails']
+
             
         title=a['title']
         thumbnail='https://i.ytimg.com/vi/'+a['videoId']+'/hqdefault.jpg'

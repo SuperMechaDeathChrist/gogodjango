@@ -451,16 +451,20 @@ def get_ep(request,ep):
         # response = redirect(url,permanent=True)
         return redirect(url,permanent=True)
     else:
-        epn=ep.split('-')[-1]
-        aid=ep.replace('-episode-'+epn,'')
+        # epn=ep.split('-')[-1]
+        # aid=ep.replace('-episode-'+epn,'')
+        
+        tail=re.findall(r'-episode-[\d-]+',ep)[0]
+        aid=ep.replace(tail,'')
+        epn=tail.replace('-episode-','')
 
         stream_r=rq.get(apiurl+'/vidcdn/watch/'+ep)
         streamj=stream_r.json()
         if not 'error' in streamj:
             stream_url=streamj['sources'][0]['file']
         else:
-            epn=ep.split('-')[-1]
-            aid=ep.replace('-episode-'+epn,'')
+            # epn=ep.split('-')[-1]
+            # aid=ep.replace('-episode-'+epn,'')
             aids=db.load()
             try:
                 a=aids[aid]['response']
@@ -468,7 +472,9 @@ def get_ep(request,ep):
                 r=rq.get(apiurl+'/anime-details/'+aid)
                 a=r.json()
             for e in a['episodesList']:
-                nepn=e['episodeId'].split('-')[-1]
+                # nepn=e['episodeId'].split('-')[-1]
+                tail=re.findall(r'-episode-[\d-]+',e['episodeId'])[0]
+                nepn=tail.replace('-episode-','')
                 if nepn==epn:
                     stream_r=rq.get(apiurl+'/vidcdn/watch/'+e['episodeId'])
                     streamj=stream_r.json()
@@ -1403,8 +1409,14 @@ def history_anime(request):
             r=rq.get(apiurl+'/anime-details/'+aid)
             a=r.json()
 
+            if 'error' in a:
+                continue
+
         epid=dbo[aid]['episode']
-        epn=epid.split('-')[-1]
+        # epn=epid.split('-')[-1]
+        
+        tail=re.findall(r'-episode-[\d-]+',epid)[0]
+        epn=tail.replace('-episode-','')
 
         title=rk.titlexml(a['animeTitle'])+' - Episode '+epn
         thumbnail=a['animeImg']

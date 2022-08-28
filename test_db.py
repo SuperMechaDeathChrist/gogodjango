@@ -39,13 +39,16 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 # dbo=db_query.github_download(gittoken,gitrepo)
 # print(dbo)
 
-# import db_history
+import db_history
 
 # db_history.wipe()
 # dbo=db_history.load()
-# # dbo['series']={}
-# # dbo['animes']={}
+# dbo['series']={}
+# dbo['animes']={}
 # db_history.github_save(dbo,gittoken,gitrepo)
 
-# dbo=db_history.github_download(gittoken,gitrepo)
-# print(dbo)
+dbo=db_history.github_download(gittoken,gitrepo)
+print(dbo)
+k,v=db_history.search('ojisan')
+print(k)
+# db_history.github_remove(k,gittoken,gitrepo)

@@ -9,6 +9,7 @@ urlpatterns = [
     path('search_fav_series/', views.search_fav_series, name='index'),
     path('search_fav_anime/', views.search_fav_anime, name='index'),
     path('search_series/', views.search_series, name='index'),
+    path('search_youtube/', views.search_youtube, name='index'),
 
     path('get_flixhq_ep/',views.get_flixhq_ep),
     path('get_flixhq_sub/',views.get_flixhq_sub),
@@ -47,5 +48,16 @@ urlpatterns = [
     path('removefrom_fav/https://gogoanime.<str:trash>/category/<str:aid>',views.removefrom_fav_anime_full_url),    
 
     path('removefrom_fav_anime/<str:aid>/',views.removefrom_fav_anime),
-    path('removefrom_fav_series/<str:ctype>/<str:id>',views.removefrom_fav_series)
+    path('removefrom_fav_series/<str:ctype>/<str:id>',views.removefrom_fav_series),
+
+    path('launch_channel/',views.launch_channel),
+
+    path('addto_yt_queue/<str:aid>/',views.addto_yt_queue),
+    path('get_yt_stream/',views.get_yt_stream),
+    path('feed_yt_queue/',views.feed_yt_queue),
+    path('view_yt_queue/',views.view_yt_queue),
+    
+    path('history_youtube/',views.history_youtube),
+    path('removefrom_yt_queue/<str:aid>/',views.removefrom_yt_queue),
 ]
+

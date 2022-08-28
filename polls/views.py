@@ -9,6 +9,7 @@ from vtt_to_srt import str_vtt_to_srt
 from django.http import HttpResponse, JsonResponse
 import json
 import re
+import time
 import random
 import unicodedata
 import rklpy_lib as rk
@@ -17,13 +18,14 @@ import traceback
 from api.settings import last_query,series_ep_cache,last_watched_cache
 
 from xml.dom import minidom
-
+import pytube
 # import imdb
 # ia = imdb.Cinemagoer()
 import db
 import db_flixhq
 import db_query
 import db_history
+import db_yt_queue
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
@@ -377,6 +379,60 @@ def search_anime(request):
     # print(last_query['animes'])
     return render(request, "search.html",context)
 
+def search_youtube(request):
+    # global last_query
+    # last_query['animes']={}
+    search_query=''
+    if request.method == 'GET': # If the form is submitted
+        search_query = request.GET.get('search_box', None)
+        an={}
+        ts=[]
+        st=[]
+        cs=[]
+        fs=[]
+        nfs=[]
+        if search_query:
+            print(search_query)
+            ans=pytube.Search(search_query)
+            for yv in ans.results:
+                # print(yv.video_id)
+                vid=yv.video_id
+                thumb=f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
+                ts.append(yv.title)
+                st.append(yv.author)
+                cs.append(thumb)
+                fs.append('../addto_yt_queue/'+vid)
+                nfs.append('../removefrom_yt_queue/'+vid)
+                # print(yv.title,yv.author,thumb)
+            # queryurl=apiconsu+'/anime/gogoanime/'+rq.utils.quote(search_query,safe='')
+            # q=rq.get(queryurl)
+            # qj=q.json()
+            # if 'results' in qj:
+            #     for qi in qj['results']:
+
+            #         ts.append(qi['title'])
+            #         st.append('['+qi['releaseDate']+']')
+            #         cs.append(qi['image'])
+            #         fs.append('../addto_fav/'+qi['id'])
+            #         nfs.append('../removefrom_fav/'+qi['id'])
+
+            #         last_query['animes'][qi['id']]=False
+                    # threading.Thread(target=_down_query_response,args=(
+                    #     apiurl+'/anime-details/'+qi['id'],
+                    #     qi['id'],
+                    #     'animes',
+                    #     )).start()
+                # threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
+
+
+    context ={
+        'nrslts':len(ts),
+        'smode':'Search YouTube',
+        'lastq':search_query,
+        'list':zip(ts,st,cs,fs,nfs),
+    }
+    return render(request, "search.html",context)
+
 def search_series(request):
     global last_query
     # create a dictionary to pass
@@ -595,6 +651,10 @@ def categories(request):
         <categoryLeaf title="Top airing" description="" feed="{dj}/polls/top_airing_anime/"/>
         <categoryLeaf title="DUB" description="" feed="{dj}/polls/recent_anime_dub/"/>
         <categoryLeaf title="CHINESE" description="" feed="{dj}/polls/recent_anime_chinese/"/>
+    </category>
+    <category title="YouTube" description="" sd_img="pkg:/images/YouTube.png" hd_img="pkg:/images/YouTube.png">
+        <categoryLeaf title="Queue" description="" feed="{dj}/polls/feed_yt_queue/"/>
+        <categoryLeaf title="History" description="" feed="{dj}/polls/history_youtube/"/>
     </category>
     
     <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Movies_TV.png" hd_img="pkg:/images/Movies_TV.png">
@@ -979,11 +1039,37 @@ def addto_fav_anime(request,aid):
             print("Failiure: not added "+aid)
             return False, aid
 
-# def addto_fav(request,aid):
-#     if not aid:
-#         raise ValueError
+def addto_yt_queue(request,aid):
+    try:
+        if not aid:
+            raise ValueError
+        
+        # db.github_add(aid,dict(response=a),gittoken,gitrepo)
+        yv=pytube.YouTube('?v='+aid)
 
-def _html_added(ans,added,aid,urlback='../../search'):
+        a=yv.vid_info['videoDetails']
+
+        threading.Thread(target=db_yt_queue.github_add,args=(aid,dict(response=a),gittoken,gitrepo,)).start()
+        # db.github_add(aid,dict(response=a),gittoken,gitrepo)
+
+        if request:
+            # return HttpResponse("Success: added "+aid)
+            return HttpResponse(_html_added('Success!','added',a['title']))
+        else:
+            print("Success: added "+aid)
+            return True,aid
+
+    except:
+        if request:
+            # return HttpResponse("Failiure: not added "+aid)
+            return HttpResponse(_html_added('Failiure!','not added',aid))
+        else:
+            print("Failiure: not added "+aid)
+            return False, aid
+
+
+def _html_added(ans,added,aid,urlback=''):
+    # urlback='../../search'
     s='''
 <html>
 <body text="#ffffff" style=" background-color: black;">
@@ -1033,9 +1119,11 @@ def _html_added(ans,added,aid,urlback='../../search'):
     #     s+='Check TeamViewer and wait for the computer to log on.<br>'
     s+='<br>Returning in 3 seconds...'
     s+='</div>'
-    #s+='<meta http-equiv="refresh" content="4;url='+urlback+'" />'
-    s+=r'''<script language="JavaScript" type="text/javascript">
-        setTimeout("window.history.go(-1)",3000);
+    if urlback:
+        s+='<meta http-equiv="refresh" content="3;url='+urlback+'" />'
+    else:
+        s+=r'''<script language="JavaScript" type="text/javascript">
+    setTimeout("window.history.go(-1)",3000);
 </script>
     '''
     s+='</body></html>'
@@ -1066,20 +1154,39 @@ def addto_fav_series(request,ctype,id):
         # if request: return HttpResponse("Failiure: not added "+aid)
         if request: return HttpResponse(_html_added('Failiure!','not added',aid))
 def removefrom_fav_anime(request,aid):
+    dj=request.build_absolute_uri().replace(request.path,'')
+    print(dj)
+    if '?' in dj:
+        dj=dj.split('?')[0]
+    print(dj)
     if db.github_remove(aid,gittoken,gitrepo):
         # if request: return HttpResponse("Success: removed "+aid)
-        if request: return HttpResponse(_html_added('Success!','removed',aid))
+        if request: return HttpResponse(_html_added('Success!','removed',aid,dj+'/polls/search_fav_anime'))
     else:
         # if request: return HttpResponse("Failiure: not removed "+aid)
-        if request: return HttpResponse(_html_added('Failiure!','not removed',aid))
+        if request: return HttpResponse(_html_added('Failiure!','not removed',aid,dj+'/polls/search_fav_anime'))
 def removefrom_fav_series(request,ctype,id):
     aid=ctype+'/'+id
+    dj=request.build_absolute_uri().replace(request.path,'')
+    if '?' in dj:
+        dj=dj.split('?')[0]
     if db_flixhq.github_remove(aid,gittoken,gitrepo):
         # if request: return HttpResponse("Success: removed "+aid)
-        if request: return HttpResponse(_html_added('Success!','removed',aid))
+        if request: return HttpResponse(_html_added('Success!','removed',aid,dj+'/polls/search_fav_series'))
     else:
         # if request: return HttpResponse("Failiure: not removed "+aid)
-        if request: return HttpResponse(_html_added('Failiure!','not removed',aid))
+        if request: return HttpResponse(_html_added('Failiure!','not removed',aid,dj+'/polls/search_fav_series'))
+
+def removefrom_yt_queue(request,aid):
+    dj=request.build_absolute_uri().replace(request.path,'')
+    if '?' in dj:
+        dj=dj.split('?')[0]
+    if db_yt_queue.github_remove(aid,gittoken,gitrepo):
+        # if request: return HttpResponse("Success: removed "+aid)
+        if request: return HttpResponse(_html_added('Success!','removed',aid,dj+'/polls/view_yt_queue/'))
+    else:
+        # if request: return HttpResponse("Failiure: not removed "+aid)
+        if request: return HttpResponse(_html_added('Failiure!','not removed',aid,dj+'/polls/view_yt_queue/'))
 
 def get_flixhq_ep(request):
     global series_ep_cache
@@ -1290,6 +1397,71 @@ def favorite_movies(request):
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
 
+def get_yt_stream(request,):
+    aid=request.GET.get('aid', None)
+    if aid:
+        print(aid)
+        yv=pytube.YouTube('?v='+aid)
+        for st in yv.streams.filter(file_extension='mp4',progressive=True):
+            if st.mime_type=='video/mp4':
+                stream_url=st.url
+                # print(st)
+                # print(st.url)
+        threading.Thread(target=db_history.github_add,args=(aid,dict(source='youtube',episode=yv.video_id),gittoken,gitrepo,)).start()
+        return redirect(stream_url,permanent=True)
+    else:
+        return HttpResponse('Error')
+
+def feed_yt_queue(request):
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+    base_url=dj+'/polls/get_yt_stream/'
+    
+    aids=db_yt_queue.load()
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+
+    for aid in aids:
+        if not aid:
+            continue
+        try:
+            a=aids[aid]['response']
+        except:
+            yv=pytube.YouTube('?v='+aid)
+            a=yv.vid_info['videoDetails']
+        # title=rk.titlexml(a['title']).replace('&quot;','"')
+        title=a['title']
+        thumbnail='https://i.ytimg.com/vi/'+a['videoId']+'/hqdefault.jpg'
+
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',title)
+        addto(root,item,'contentId',aid)
+        addto(root,item,'contentType','Episode')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','mp4')
+        media=addto(root,item,'media')
+        url_args=pathargs(aid=a['videoId'])
+        addto(root,media,'streamUrl',base_url+url_args)
+        desc=a['shortDescription']
+
+        addto(root,item,'synopsis',
+            desc
+            )
+        try:
+            addto(root,item,'genres',', '.join(a['keywords']))
+        except:
+            addto(root,item,'genres','')
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
+    return HttpResponse(xml_str,content_type='text/xml')
 
 def last_query_series(request):
     # global last_query
@@ -1548,4 +1720,171 @@ def history_series(request):
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
     return HttpResponse(xml_str,content_type='text/xml')
 
+def view_yt_queue(request):
+    sort='False'
+    view=None
+    if request.method == 'GET': # If the form is submitted
+        ts=[]
+        st=[]
+        cs=[]
+        fs=[]
+        nfs=[]
+        aids=db_yt_queue.load()
+        sort=request.GET.get('sort', None)
+        sort='False' if not sort else sort
+        
+        view=request.GET.get('view', None)
+        view='all' if not view else view
+
+        if sort=='False':
+            do=aids
+        else:
+            # do=sorted(aids)
+            titles=[]
+            for vid in aids:
+                if vid:
+                    titles.append((aids[vid]['response']['title'].lower(),vid))
+                do=[]
+                for t in sorted(titles):
+                    do.append(t[1])
+            # do={k: v for k, v in sorted(aids.items(), key=lambda item: item[1]['response']['title'].lower())}
+        for aid in do:
+            if aid:
+                # if view=='series' and aid[0:2]!='tv':
+                #     continue
+                # elif view=='movies' and aid[0:2]=='tv':
+                #     continue
+
+                qi=aids[aid]['response']
+                # print(qi)
+                ts.append(qi['title'])
+                st.append(qi['author'])
+                thumb='https://i.ytimg.com/vi/'+qi['videoId']+'/hqdefault.jpg'
+                cs.append(thumb)
+                fs.append('')
+                nfs.append('../removefrom_yt_queue/'+qi['videoId'])
+                
+    context ={
+        'smode':'YouTube Queue',
+        'sort':sort,
+        'view':view,
+        'list':zip(ts,st,cs,fs,nfs),
+    }
+    return render(request, "favs.html",context)
+
+def history_youtube(request):
+    dj=request.build_absolute_uri().replace(request.path,'')
+    base_url=dj+'/polls/get_yt_stream/'
+
+
+    dbo=db_history.github_download(gittoken,gitrepo)
+    aids=db_yt_queue.load()
+    
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    
+    ii=0
+    for aid in reversed(dbo):
+        if not aid:
+            continue
+        if dbo[aid]['source']!='youtube':
+            continue
+        ii+=1
+        if ii>15:
+            dbo.pop(aid,None)
+            continue
+        try:
+            a=aids[aid]['response']
+        except:
+            yv=pytube.YouTube('?v='+aid)
+            a=yv.vid_info['videoDetails']
+            
+        title=a['title']
+        thumbnail='https://i.ytimg.com/vi/'+a['videoId']+'/hqdefault.jpg'
+
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',title)
+        addto(root,item,'contentId',aid)
+        addto(root,item,'contentType','Episode')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','mp4')
+        media=addto(root,item,'media')
+        url_args=pathargs(aid=a['videoId'])
+        addto(root,media,'streamUrl',base_url+url_args)
+        desc=a['shortDescription']
+
+        addto(root,item,'synopsis',
+            desc
+            )
+        addto(root,item,'genres',', '.join(a['keywords']))
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
+    return HttpResponse(xml_str,content_type='text/xml')
+
+
 threading.Thread(target=update_last_query).start()
+
+def schedule_once(target,args=(),dt=0):
+    def delayed_fun():
+        time.sleep(dt)
+        target(*args)
+    threading.Thread(target=delayed_fun).start()
+
+
+def launch_channel(request):
+    roku='http://192.168.0.42:8060'
+    # http://$ROKU_DEV_TARGET:8060/keypress/home
+    rq.post(roku+'/keypress/home')
+    rq.post(roku+'/keypress/home')
+    # rq.post(roku+'/launch/dev')
+    schedule_once(rq.post,args=(roku+'/launch/dev',),dt=2)
+
+    urlback=''
+    s='''
+<html>
+<body text="#ffffff" style=" background-color: black;">
+<head>
+    <meta charset = "utf-8">
+    <title>GeeksforGeeks Example</title>
+
+    <!--CSS Code-->
+    <style media = "screen">
+        body {
+            background: orange;
+            overflow: hidden;
+            color: white;
+        }
+        .GeeksForGeeks {
+            text-align: center;
+            background: #282923;
+            font-size: 3.5vw;
+            position: absolute;
+            top: 1%;
+            left: 1%;
+            right: 1%;
+        }
+    </style>
+</head>
+ <div class = "GeeksForGeeks">
+    '''
+    # if ans=='Success!':
+    #     s+='Check TeamViewer and wait for the computer to log on.<br>'
+    # s+=url
+    s+='<br>Returning...'
+    s+='</div>'
+    if urlback:
+        s+='<meta http-equiv="refresh" content="3;url='+urlback+'" />'
+    else:
+        s+=r'''<script language="JavaScript" type="text/javascript">
+    setTimeout("window.history.go(-1)",1000);
+</script>
+    '''
+    s+='</body></html>'
+
+    # return s
+    return HttpResponse(s)

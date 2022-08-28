@@ -1070,6 +1070,7 @@ def addto_yt_queue(request,aid):
 
 def _html_added(ans,added,aid,urlback=''):
     # urlback='../../search'
+    urlback=''
     s='''
 <html>
 <body text="#ffffff" style=" background-color: black;">
@@ -1117,13 +1118,13 @@ def _html_added(ans,added,aid,urlback=''):
     s+='<br>'
     # if ans=='Success!':
     #     s+='Check TeamViewer and wait for the computer to log on.<br>'
-    s+='<br>Returning in 3 seconds...'
+    s+='<br>Returning in 2 seconds...'
     s+='</div>'
     if urlback:
         s+='<meta http-equiv="refresh" content="3;url='+urlback+'" />'
     else:
         s+=r'''<script language="JavaScript" type="text/javascript">
-    setTimeout("window.history.go(-1)",3000);
+    setTimeout("window.history.go(-1)",2000);
 </script>
     '''
     s+='</body></html>'
@@ -1840,10 +1841,10 @@ def schedule_once(target,args=(),dt=0):
 def launch_channel(request):
     roku='http://192.168.0.42:8060'
     # http://$ROKU_DEV_TARGET:8060/keypress/home
-    rq.post(roku+'/keypress/home')
-    rq.post(roku+'/keypress/home')
+    # rq.post(roku+'/keypress/home')
+    # rq.post(roku+'/keypress/home')
     # rq.post(roku+'/launch/dev')
-    schedule_once(rq.post,args=(roku+'/launch/dev',),dt=2)
+    # schedule_once(rq.post,args=(roku+'/launch/dev',),dt=2)
 
     urlback=''
     s='''
@@ -1882,7 +1883,20 @@ def launch_channel(request):
         s+='<meta http-equiv="refresh" content="3;url='+urlback+'" />'
     else:
         s+=r'''<script language="JavaScript" type="text/javascript">
-    setTimeout("window.history.go(-1)",1000);
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://192.168.0.42:8060/keypress/home");
+    xhr.send();
+
+    let xhr2 = new XMLHttpRequest();
+    xhr2.open("POST", "http://192.168.0.42:8060/keypress/home");
+    setTimeout("xhr2.send()",500);
+
+    let xhr3 = new XMLHttpRequest();
+    xhr3.open("POST", "http://192.168.0.42:8060/launch/dev");
+    setTimeout("xhr3.send()",1000);
+
+    setTimeout("window.history.go(-1)",1500);
+
 </script>
     '''
     s+='</body></html>'

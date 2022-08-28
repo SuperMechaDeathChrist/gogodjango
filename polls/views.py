@@ -1408,6 +1408,7 @@ def get_yt_stream(request,):
                 # print(st)
                 # print(st.url)
         threading.Thread(target=db_history.github_add,args=(aid,dict(source='youtube',episode=yv.video_id),gittoken,gitrepo,)).start()
+        threading.Thread(target=db_yt_queue.github_remove,args=(aid,gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
     else:
         return HttpResponse('Error')

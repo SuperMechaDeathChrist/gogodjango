@@ -1408,8 +1408,13 @@ def get_yt_stream(request,):
                 if st.mime_type=='video/mp4':
                     stream_url=st.url
         except:
-            r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
-            rj=r.json()
+            try:
+                r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+                rj=r.json()
+            except:
+                time.sleep(1.5)
+                r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+                rj=r.json()
             for st in rj['formatStreams']:
                 if 'video/mp4' in st['type']:
                     stream_url= st['url']

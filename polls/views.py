@@ -14,7 +14,7 @@ import unicodedata
 import rklpy_lib as rk
 import traceback
 
-from api.settings import last_query,series_ep_cache
+from api.settings import last_query,series_ep_cache,last_watched_cache
 
 from xml.dom import minidom
 
@@ -23,6 +23,7 @@ from xml.dom import minidom
 import db
 import db_flixhq
 import db_query
+import db_history
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
@@ -38,7 +39,8 @@ gittoken = fernet.decrypt(encMessage).decode()
 gitrepo="SuperMechaDeathChrist/gogodjango"
 #
 
-last_query=db_query.github_download(gittoken,gitrepo)
+# last_query=db_query.github_download(gittoken,gitrepo)
+
 
 def pathargs(**d):
     ans='?'
@@ -449,6 +451,9 @@ def get_ep(request,ep):
         # response = redirect(url,permanent=True)
         return redirect(url,permanent=True)
     else:
+        epn=ep.split('-')[-1]
+        aid=ep.replace('-episode-'+epn,'')
+
         stream_r=rq.get(apiurl+'/vidcdn/watch/'+ep)
         streamj=stream_r.json()
         if not 'error' in streamj:
@@ -470,6 +475,7 @@ def get_ep(request,ep):
                     stream_url=streamj['sources'][0]['file']
                     break
 
+        threading.Thread(target=db_history.github_add,args=(aid,dict(source='gogo',episode=ep),gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
 
 
@@ -524,23 +530,7 @@ def get_feed(request):
 
     feed['series']=[]
 
-    aids=[
-    'accel-world-dub',
-    'overlord-iv',
-    'https://gogoanime.lu/category/dungeon-ni-deai-wo-motomeru-no-wa-machigatteiru-darou-ka-iv',
-    'high-school-dxd-dub',#12
-    'https://gogoanime.gg/category/high-school-dxd-new-dub',#13
-    'https://gogoanime.gg/category/high-school-dxd-born-dub',#15
-    'high-school-dxd-hero-dub',#18
-    'https://gogoanime.gg/category/high-school-dxd-specials-ova',
-    'https://gogoanime.gg/category/high-school-dxd-specials',
-    'https://gogoanime.gg/category/highschool-dxd-born-specials'
-    'https://gogoanime.gg/category/highschool-dxd-born-yomigaerarenai-pheonix'
-    
-
-
-
-    ]
+    aids=db.load()
 #     aids='''overlord-iv
 # accel-world-dub
 #     '''.replace('\n',' ').replace('  ',' ').split()
@@ -573,12 +563,18 @@ def get_rss_feed(request):
         ans=fid.read()
     return HttpResponse(ans)
 
+def update_last_query():
+    global last_query
+    last_query=db_query.github_download(gittoken,gitrepo)
 
 def categories(request):
     x=threading.Thread(target=update_fav_anime)
     x.start()
     y=threading.Thread(target=update_fav_series)
     y.start()
+
+    threading.Thread(target=update_last_query).start()
+
     # with open(r"C:\c\Python_projects\anime_site\api\polls\categories.xml", 'r',encoding='utf-8') as fid:
     #     ans=fid.read()
     dj=request.build_absolute_uri().replace(request.path,'')
@@ -588,19 +584,21 @@ def categories(request):
       <!-- banner_ad: optional element which displays an at the top level category screen -->
       <banner_ad sd_img="https://devtools.web.roku.com/videoplayer/images/missing.png" hd_img="https://devtools.web.roku.com/videoplayer/images/missing.png"/>
 
-     <category title="Anime" description="Gogoanime" sd_img="pkg:/images/gogoanime.jpg" hd_img="pkg:/images/gogoanime.jpg">
+     <category title="Gogoanime" description="Anime" sd_img="pkg:/images/gogoanime.jpg" hd_img="pkg:/images/gogoanime.jpg">
         <categoryLeaf title="-Recent release-" description="" feed="{dj}/polls/recent_anime/"/>
         <categoryLeaf title="Top airing" description="" feed="{dj}/polls/top_airing_anime/"/>
         <categoryLeaf title="DUB" description="" feed="{dj}/polls/recent_anime_dub/"/>
         <categoryLeaf title="CHINESE" description="" feed="{dj}/polls/recent_anime_chinese/"/>
     </category>
     
-    <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Favorites.png" hd_img="pkg:/images/Favorites.png">
+    <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Movies_TV.png" hd_img="pkg:/images/Movies_TV.png">
         <categoryLeaf title="Favorite Movies" description="" feed="{dj}/polls/favorite_movies/"/>
         <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
+        <categoryLeaf title="Last watched episodes" description="" feed="{dj}/polls/history_series/"/>
     </category>
     <category title="Favorite Animes" description="Animes/OVAs/Anime movies" sd_img="pkg:/images/Favorite_anime" hd_img="pkg:/images/Favorite_anime.png">
         <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
+        <categoryLeaf title="Last watched" description="" feed="{dj}/polls/history_anime/"/>
     </category>
     <category title="Search" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
         <categoryLeaf title="Last searched series" description="" feed="{dj}/polls/last_query_series/"/>
@@ -796,6 +794,7 @@ def last_query_animes(request):
                 r=rq.get(apiurl+'/anime-details/'+aid)
                 a=r.json()
 
+
         title=rk.titlexml(a['animeTitle'])
         thumbnail=a['animeImg']
 
@@ -955,7 +954,9 @@ def addto_fav_anime(request,aid):
         #     )
         if 'error' in a:
             raise ValueError
-        db.github_add(aid,dict(response=a),gittoken,gitrepo)
+        # db.github_add(aid,dict(response=a),gittoken,gitrepo)
+        threading.Thread(target=db.github_add,args=(aid,dict(response=a),gittoken,gitrepo,)).start()
+        # db.github_add(aid,dict(response=a),gittoken,gitrepo)
 
         if request:
             # return HttpResponse("Success: added "+aid)
@@ -1050,7 +1051,8 @@ def addto_fav_series(request,ctype,id):
         # print('<>'*30)
         # print(type(a),'a')
         # print(gittoken,gitrepo)
-        db_flixhq.github_add(aid,dict(response=a),gittoken,gitrepo)
+        # db_flixhq.github_add(aid,dict(response=a),gittoken,gitrepo)
+        threading.Thread(target=db_flixhq.github_add,args=(aid,dict(response=a),gittoken,gitrepo,)).start()
         # if request: return HttpResponse("Success: added "+aid)
         if request: return HttpResponse(_html_added('Success!','added',aid))
     except:
@@ -1083,6 +1085,7 @@ def get_flixhq_ep(request):
         aid=request.GET.get('aid', None)
         # print(eid)
         # print(aid)
+        db_history.github_add
 
         url_args=pathargs(episodeId=eid,server='vidcloud',mediaId=aid)
 
@@ -1103,6 +1106,7 @@ def get_flixhq_ep(request):
         except:
             series_ep_cache[url_args]=''
 
+        threading.Thread(target=db_history.github_add,args=(aid,dict(source='flixhq',episode=eid),gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
     else:
         url='http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
@@ -1344,6 +1348,7 @@ def last_query_series(request):
                     subs=dj+'/polls/get_flixhq_sub/'+url_args
                     ))
         else:
+            continue
             title=rk.titlexml(a['title'])
             thumbnail=a['image']
 
@@ -1371,8 +1376,164 @@ def last_query_series(request):
 
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
+def history_anime(request):
+    dj=request.build_absolute_uri().replace(request.path,'')
+    base_url=dj+'/polls/get_ep/'
 
-# db.wipe()
-# update_fav_anime()
-# addto_fav_anime(None,'bastard-ankoku-no-hakaishin-ona-dub')
-# db.printdb()
+
+    dbo=db_history.github_download(gittoken,gitrepo)
+    aids=db_flixhq.load()
+    
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    
+    ii=0
+    for aid in reversed(dbo):
+        if not aid:
+            continue
+        if dbo[aid]['source']!='gogo':
+            continue
+        ii+=1
+        # if ii>30:
+        #     dbo.pop(aid,None)
+        try:
+            a=aids[aid]['response']
+        except:
+            r=rq.get(apiurl+'/anime-details/'+aid)
+            a=r.json()
+
+        epid=dbo[aid]['episode']
+        epn=epid.split('-')[-1]
+
+        title=rk.titlexml(a['animeTitle'])+' - Episode '+epn
+        thumbnail=a['animeImg']
+
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',title)
+        addto(root,item,'contentId',aid+'+'+epid)
+        addto(root,item,'contentType','Season')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','hls')
+        addto(root,item,'synopsis',a['synopsis'])
+        addto(root,item,'genres',['SUB','DUB'][bool(aid[-3:].lower()=='dub')])
+
+        media=addto(root,item,'media')
+        addto(root,media,'streamUrl',base_url+'test')
+        season=addto(root,media,'season',None)
+
+        
+        donow=False
+        for e in reversed(a['episodesList']):
+            if e['episodeId']==epid and donow==False:
+                donow=True
+            if donow:
+                addto(root,season,'episode',attr=dict(
+                    title='Episode '+e['episodeNum'],
+                    url=base_url+e['episodeId']
+                    ))
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
+    return HttpResponse(xml_str,content_type='text/xml')
+def history_series(request):
+    dj=request.build_absolute_uri().replace(request.path,'')
+    base_url=dj+'/polls/get_flixhq_ep/'
+
+    
+    dbo=db_history.github_download(gittoken,gitrepo)
+    aids=db_flixhq.load()
+    
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    
+    ii=0
+    for aid in reversed(dbo):
+        if not aid:
+            continue
+        if dbo[aid]['source']!='flixhq':
+            continue
+        istv=True if aid[0:2]=='tv' else False
+
+        ii+=1
+        # if ii>30:
+        #     dbo.pop(aid,None)
+        try:
+            a=aids[aid]['response']
+        except:
+            r=rq.get(apiurl+'/anime-details/'+aid)
+            a=r.json()
+
+        epid=dbo[aid]['episode']
+
+        if istv:
+            ii+=1
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'contentId',aid+'+'+epid)
+            addto(root,item,'contentType','Season')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            addto(root,media,'streamUrl',base_url)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/')
+            season=addto(root,media,'season',None)
+            addto(root,item,'synopsis',
+                ''
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+            donow=False
+            for e in a['episodes']:
+                if e['id']==epid and donow==False:
+                    eptitle='S'+str(e['season']).rjust(2,'0')+e['title']
+                    addto(root,item,'title',title+' - '+eptitle)
+                    donow=True
+                if donow:
+                    url_args=pathargs(eid=e['id'],aid=aid)
+                    addto(root,season,'episode',attr=dict(
+                        # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
+                        title='S'+str(e['season']).rjust(2,'0')+e['title'],
+                        url=base_url+url_args,
+                        subs=dj+'/polls/get_flixhq_sub/'+url_args
+                        ))
+        else:
+            continue
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Episode')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            url_args=pathargs(eid=a['episodes'][0]['id'],aid=aid)
+            addto(root,media,'streamUrl',base_url+url_args)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/'+url_args)
+            # season=addto(root,media,'season',None)
+            desc='Released: '+a['releaseDate']
+
+            addto(root,item,'synopsis',
+                desc
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
+    return HttpResponse(xml_str,content_type='text/xml')
+
+threading.Thread(target=update_last_query).start()

@@ -142,3 +142,4 @@ last_query={
     'animes':{}
 }
 series_ep_cache={}
+last_watched_cache={}

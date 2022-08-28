@@ -25,6 +25,8 @@ urlpatterns = [
 
     path('last_query_animes/',views.last_query_animes),
     path('last_query_series/',views.last_query_series),
+    path('history_anime/',views.history_anime),
+    path('history_series/',views.history_series),
 
     path('top_airing_anime/',views.test),
     path('favorite_series/',views.favorite_series),

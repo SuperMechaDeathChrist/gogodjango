@@ -393,35 +393,42 @@ def search_youtube(request):
         nfs=[]
         if search_query:
             print(search_query)
-            ans=pytube.Search(search_query)
-            for yv in ans.results:
-                # print(yv.video_id)
-                vid=yv.video_id
-                thumb=f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
-                ts.append(yv.title)
-                st.append(yv.author)
-                cs.append(thumb)
-                fs.append('../addto_yt_queue/'+vid)
-                nfs.append('../removefrom_yt_queue/'+vid)
-                # print(yv.title,yv.author,thumb)
-            # queryurl=apiconsu+'/anime/gogoanime/'+rq.utils.quote(search_query,safe='')
-            # q=rq.get(queryurl)
-            # qj=q.json()
-            # if 'results' in qj:
-            #     for qi in qj['results']:
+            mode=('pytube','invidious')[1]
+            if mode=='pytube':
+                ans=pytube.Search(search_query)
+                for yv in ans.results:
+                    # print(yv.video_id)
+                    vid=yv.video_id
+                    thumb=f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
+                    ts.append(yv.title)
+                    st.append(yv.author)
+                    cs.append(thumb)
+                    fs.append('../addto_yt_queue/'+vid)
+                    nfs.append('../removefrom_yt_queue/'+vid)
+            elif mode=='invidious':
+                # https://vid.puffyan.us//api/v1/search?q=ghost&fields=title,author,publishedText
+                for i in range(3):
+                    url='https://vid.puffyan.us//api/v1/search?q='+rq.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText'
+                    # print(url)
+                    try:
+                        r=rq.get(url)
+                        rj=r.json()
+                        for yv in rj:
+                            if 'author' in yv and not 'videoId' in yv:
+                                continue
+                            # print(yv)
+                            vid=yv['videoId']
+                            thumb=f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
+                            ts.append(yv['title'])
+                            st.append(yv['author']+' | '+yv['publishedText'])
+                            cs.append(thumb)
+                            fs.append('../addto_yt_queue/'+vid)
+                            nfs.append('../removefrom_yt_queue/'+vid)
+                        break
+                    except:
+                        traceback.print_exc()
+                        time.sleep(1.5)
 
-            #         ts.append(qi['title'])
-            #         st.append('['+qi['releaseDate']+']')
-            #         cs.append(qi['image'])
-            #         fs.append('../addto_fav/'+qi['id'])
-            #         nfs.append('../removefrom_fav/'+qi['id'])
-
-            #         last_query['animes'][qi['id']]=False
-                    # threading.Thread(target=_down_query_response,args=(
-                    #     apiurl+'/anime-details/'+qi['id'],
-                    #     qi['id'],
-                    #     'animes',
-                    #     )).start()
                 # threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
 
 

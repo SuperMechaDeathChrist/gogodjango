@@ -1855,7 +1855,10 @@ def history_youtube(request):
         addto(root,item,'synopsis',
             desc
             )
-        addto(root,item,'genres',', '.join(a['keywords']))
+        try:
+            addto(root,item,'genres',', '.join(a['keywords']))
+        except:
+            addto(root,item,'genres','')
 
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
     return HttpResponse(xml_str,content_type='text/xml')

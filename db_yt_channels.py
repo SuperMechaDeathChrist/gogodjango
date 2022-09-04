@@ -1,4 +1,5 @@
-dbpath='db_flixhq.dat'
+dbpath='db_yt_channels.dat'
+
 import pickle
 from github import Github
 import unicodedata

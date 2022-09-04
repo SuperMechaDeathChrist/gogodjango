@@ -1,5 +1,4 @@
 dbpath='db_history.dat'
-#
 import pickle
 from github import Github
 import unicodedata
@@ -149,6 +148,7 @@ def save(dbo):
 
 def add(key,value):
     dbo=load()
+    dbo.pop(key,None)
     dbo[key]=value
     # dbo['']['edited']=time.time()
     save(dbo)
@@ -212,12 +212,3 @@ def search(s):
 
 if not os.path.exists(dbpath):
     wipe()
-
-# printdb()
-# wipe()
-# print(load()[search('devil is a')])
-
-# printdb(exclude='resolutions synopsis')
-
-
-# print(load()[search('cover')]['@microsoft.graph.downloadUrl'])

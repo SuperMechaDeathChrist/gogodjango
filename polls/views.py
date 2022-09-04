@@ -2,7 +2,13 @@ import sys
 sys.path.append('../')
 from django.shortcuts import render,redirect
 from django.urls import reverse
-import requests as rq
+# import requests as rq
+import requests
+requests.packages.urllib3.util.connection.HAS_IPV6 = False
+rq=requests.Session()
+rq.headers.update({'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_2) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1309.0 Safari/537.17'})
+
+
 import threading
 from vtt_to_srt import str_vtt_to_srt
 # Create your views here.
@@ -47,7 +53,7 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 def pathargs(**d):
     ans='?'
     for k in d:
-        ans+=k+'='+rq.utils.quote(d[k],safe='')+'&'
+        ans+=k+'='+requests.utils.quote(d[k],safe='')+'&'
     return ans.strip('&')
 
 def addto(root,parent,element,value=None,attr=''):
@@ -335,7 +341,7 @@ def search_anime(request):
         if search_query:
             print(search_query)
             # queryurl=apiurl+'/search'+pathargs(keyw=search_query)
-            queryurl=apiconsu+'/anime/gogoanime/'+rq.utils.quote(search_query,safe='')
+            queryurl=apiconsu+'/anime/gogoanime/'+requests.utils.quote(search_query,safe='')
             # print(queryurl)
             q=rq.get(queryurl)
             qj=q.json()
@@ -394,23 +400,26 @@ def search_youtube(request):
         if search_query:
             print(search_query)
             mode=('pytube','invidious')[1]
-            if mode=='pytube':
-                ans=pytube.Search(search_query)
-                for yv in ans.results:
-                    # print(yv.video_id)
-                    vid=yv.video_id
-                    thumb=f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
-                    ts.append(yv.title)
-                    st.append(yv.author)
-                    cs.append(thumb)
-                    fs.append('../addto_yt_queue/'+vid)
-                    nfs.append('../removefrom_yt_queue/'+vid)
-            elif mode=='invidious':
+            for i in range(5):
+                try:
+                    if mode=='pytube':
+                        ans=pytube.Search(search_query)
+                        for yv in ans.results:
+                            # print(yv.video_id)
+                            vid=yv.video_id
+                            thumb=f'https://i.ytimg.com/vi/{vid}/hqdefault.jpg'
+                            ts.append(yv.title)
+                            st.append(yv.author)
+                            cs.append(thumb)
+                            fs.append('../addto_yt_queue/'+vid)
+                            nfs.append('../removefrom_yt_queue/'+vid)
+                        break
+                    elif mode=='invidious':
                 # https://vid.puffyan.us//api/v1/search?q=ghost&fields=title,author,publishedText
-                for i in range(3):
-                    url='https://vid.puffyan.us//api/v1/search?q='+rq.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText'
+                # for i in range(5):
+                        url='https://vid.puffyan.us//api/v1/search?q='+requests.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText'
                     # print(url)
-                    try:
+                    # try:
                         r=rq.get(url)
                         rj=r.json()
                         for yv in rj:
@@ -425,9 +434,10 @@ def search_youtube(request):
                             fs.append('../addto_yt_queue/'+vid)
                             nfs.append('../removefrom_yt_queue/'+vid)
                         break
-                    except:
-                        traceback.print_exc()
-                        time.sleep(1.5)
+                except:
+                    mode='pytube' if mode=='invidious' else 'invidious'
+                    traceback.print_exc()
+                    time.sleep(1.5)
 
                 # threading.Thread(target=db_query.github_save,args=(last_query,gittoken,gitrepo)).start()
 
@@ -457,7 +467,7 @@ def search_series(request):
         if search_query:
             print(search_query)
             # queryurl=apiurl+'/search'+pathargs(keyw=search_query)
-            queryurl=apiconsu+'/movies/flixhq/'+rq.utils.quote(search_query,safe='')
+            queryurl=apiconsu+'/movies/flixhq/'+requests.utils.quote(search_query,safe='')
             print(queryurl)
             q=rq.get(queryurl)
             qj=q.json()

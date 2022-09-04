@@ -1,5 +1,5 @@
 dbpath='db_yt_queue.dat'
-#
+
 import pickle
 from github import Github
 import unicodedata
@@ -109,6 +109,7 @@ def github_save(dbo,token,repo):
     save(dbo)
 def github_add(key,value,token,repo):
     dbo=github_download(token,repo,do_save=False)
+    dbo.pop(key,None)
     dbo[key]=value
     # dbo['']['edited']=time.time()
     # save(dbo)
@@ -148,6 +149,7 @@ def save(dbo):
 
 def add(key,value):
     dbo=load()
+    dbo.pop(key,None)
     dbo[key]=value
     # dbo['']['edited']=time.time()
     save(dbo)

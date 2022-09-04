@@ -506,7 +506,7 @@ def search_youtube(request):
 
 def short_h_m_s(secs):
     s=time.strftime('%H:%M:%S', time.gmtime(secs))
-    return s.lstrip('0').lstrip(':').lstrip('0')
+    return s.lstrip('0').lstrip(':').lstrip('0').lstrip(':')
 
 def search_series(request):
     global last_query

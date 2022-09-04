@@ -234,6 +234,7 @@ def search_fav_series(request):
                     continue
 
                 qi=aids[aid]['response']
+                # print(aid,qi)
                 ts.append(qi['title'])
                 st.append('['+qi['releaseDate']+']')
                 cs.append(qi['image'])
@@ -992,7 +993,8 @@ def _down_response(curl,aid,dbid):
         a=r.json()
 
         if dbid=='flixhq':
-            series_results[aid]=dict(response=a)
+            if 'title' in a:
+                series_results[aid]=dict(response=a)
         elif dbid=='gogoanime':
             anime_results[aid]=dict(response=a)
         print(curl)

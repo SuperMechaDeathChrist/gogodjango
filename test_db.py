@@ -1,5 +1,5 @@
 # import requests
-# import db_flixhq
+import db_flixhq
 # import db
 
 from cryptography.fernet import Fernet
@@ -10,7 +10,8 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 
-# dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
+dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
+db_flixhq.printdb()
 # #dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
 # for k in dbo:
 # 	if k:
@@ -54,13 +55,13 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 # print(k)
 # db_history.github_remove(k,gittoken,gitrepo)
 
-import db_yt_queue
+# import db_yt_queue
 
 # db_yt_queue.wipe()
 # dbo=db_yt_queue.load()
 # db_yt_queue.github_save(dbo,gittoken,gitrepo)
 
-dbo=db_yt_queue.github_download(gittoken,gitrepo)
+# dbo=db_yt_queue.github_download(gittoken,gitrepo)
 # for k in dbo:
 # 	if k:
 # 		print(k,dbo[k])

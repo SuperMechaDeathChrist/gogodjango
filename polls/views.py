@@ -1882,9 +1882,9 @@ def history_youtube(request):
         if dbo[aid]['source']!='youtube':
             continue
         ii+=1
-        if ii>15:
-            dbo.pop(aid,None)
-            continue
+        if ii>25:
+            # dbo.pop(aid,None)
+            break
         try:
             a=aids[aid]['response']
         except:

@@ -39,23 +39,29 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 # dbo=db_query.github_download(gittoken,gitrepo)
 # print(dbo)
 
-import db_history
+# import db_history
 
-# db_history.wipe()
-# dbo=db_history.load()
-# dbo['series']={}
-# dbo['animes']={}
-# db_history.github_save(dbo,gittoken,gitrepo)
+# # db_history.wipe()
+# # dbo=db_history.load()
+# # dbo['series']={}
+# # dbo['animes']={}
+# # db_history.github_save(dbo,gittoken,gitrepo)
 
-dbo=db_history.github_download(gittoken,gitrepo)
-# print(dbo)
-db_history.printdb()
+# dbo=db_history.github_download(gittoken,gitrepo)
+# # print(dbo)
+# db_history.printdb()
 # k,v=db_history.search('kgt2ba9u4zy')
 # print(k)
 # db_history.github_remove(k,gittoken,gitrepo)
 
-# import db_yt_queue
+import db_yt_queue
 
 # db_yt_queue.wipe()
 # dbo=db_yt_queue.load()
 # db_yt_queue.github_save(dbo,gittoken,gitrepo)
+
+dbo=db_yt_queue.github_download(gittoken,gitrepo)
+# for k in dbo:
+# 	if k:
+# 		print(k,dbo[k])
+# db_yt_queue.printdb()

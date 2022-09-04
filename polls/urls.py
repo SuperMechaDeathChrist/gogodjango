@@ -59,5 +59,7 @@ urlpatterns = [
     
     path('history_youtube/',views.history_youtube),
     path('removefrom_yt_queue/<str:aid>/',views.removefrom_yt_queue),
+    path('view/',views.view),
+
 ]
 

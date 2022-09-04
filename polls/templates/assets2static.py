@@ -1,5 +1,5 @@
 import re
-f='-search.html'
+f='-view.html'
 html='{% load static %}\n'
 with open(f,'r',encoding='utf-8') as fid:
 	s=fid.read()

@@ -213,6 +213,8 @@ def search_fav_series(request):
         cs=[]
         fs=[]
         nfs=[]
+        lens=[]
+        # streams=[]
         aids=db_flixhq.load()
         sort=request.GET.get('sort', None)
         sort='False' if not sort else sort
@@ -237,6 +239,8 @@ def search_fav_series(request):
                 cs.append(qi['image'])
                 fs.append('../addto_fav/'+qi['id'])
                 nfs.append('../removefrom_fav/'+qi['id'])
+                lens.append('')
+                # streams.append('../get_ep_flixhq/'+qi['id'])
 
                 # last_query['animes'][qi['id']]=False
                 # threading.Thread(target=_down_query_response,args=(
@@ -248,9 +252,52 @@ def search_fav_series(request):
         'smode':'Fav Series',
         'sort':sort,
         'view':view,
-        'list':zip(ts,st,cs,fs,nfs),
+        'list':zip(ts,st,cs,fs,nfs,lens),
     }
     return render(request, "favs.html",context)
+def view(request):
+    dj=request.build_absolute_uri().replace(request.path,'').split('?')[0]
+    if request.method == 'GET': # If the form is submitted
+        f=request.GET.get('f', r"")
+        aid=f.split('addto_fav/')[-1]
+        if 'tv/' or 'movie/' in aid:
+            try:
+                dbo=db_flixhq.load()
+                a=dbo[aid]['response']
+            except:
+                r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                a=r.json()
+            base_url=dj+'/polls/get_flixhq_ep/'
+            title=a['title']
+            cover=a['image']
+            epstream=[]
+            eptit=[]
+            if 'tv/' == aid[:3]:
+                for e in a['episodes']:
+                    url_args=pathargs(eid=e['id'],aid=aid)
+                    epstream.append(base_url+url_args)
+                    eptit.append('S'+str(e['season']).rjust(2,'0')+e['title'])
+                    # addto(root,season,'episode',attr=dict(
+                    # title='S'+str(e['season']).rjust(2,'0')+e['title'],
+                    # url=base_url+url_args,
+                    # subs=dj+'/polls/get_flixhq_sub/'+url_args
+                    # ))
+            else:
+                e=a['episodes'][0]
+                url_args=pathargs(eid=e['id'],aid=aid)
+                
+                # url_args=pathargs(episodeId=e['id'],server='vidcloud',mediaId=aid)
+                # er=rq.get(apiconsu+'/movies/flixhq/watch'+url_args)
+                # erj=er.json()
+                # stream_url=erj['sources'][0]['url']
+                # epstream.append(stream_url)
+
+                epstream.append(base_url+url_args)
+                
+                
+                eptit.append(a['title'])
+    context={'title':title,'cover':cover,'episodes':zip(epstream,eptit),'eplen':len(eptit)}
+    return render(request,'view.html',context)
 def search_fav_anime(request):
     sort='False'
     view=None
@@ -260,6 +307,7 @@ def search_fav_anime(request):
         cs=[]
         fs=[]
         nfs=[]
+        lens=[]
         aids=db.load()
         sort=request.GET.get('sort', None)
         sort='False' if not sort else sort
@@ -302,7 +350,7 @@ def search_fav_anime(request):
                     cs.append(qi['animeImg'])
                     fs.append('../addto_fav/'+aid)
                     nfs.append('../removefrom_fav/'+aid)
-
+                lens.append('')
                 # ts.append(qi['title'])
                 # st.append('['+qi['releaseDate']+']')
                 # cs.append(qi['image'])
@@ -319,7 +367,7 @@ def search_fav_anime(request):
         'smode':'Fav Anime',
         'sort':sort,
         'view':view,
-        'list':zip(ts,st,cs,fs,nfs),
+        'list':zip(ts,st,cs,fs,nfs,lens),
     }
     return render(request, "favs.html",context)
 
@@ -338,6 +386,7 @@ def search_anime(request):
         cs=[]
         fs=[]
         nfs=[]
+        lens=[]
         if search_query:
             print(search_query)
             # queryurl=apiurl+'/search'+pathargs(keyw=search_query)
@@ -356,12 +405,14 @@ def search_anime(request):
                     # cs.append(qi['animeImg'])
                     # fs.append('../addto_fav/'+qi['animeId'])
                     # nfs.append('../removefrom_fav/'+qi['animeId'])
+                    print(qi)
 
                     ts.append(qi['title'])
                     st.append('['+qi['releaseDate']+']')
                     cs.append(qi['image'])
                     fs.append('../addto_fav/'+qi['id'])
                     nfs.append('../removefrom_fav/'+qi['id'])
+                    lens.append('')
 
                     last_query['animes'][qi['id']]=False
                     threading.Thread(target=_down_query_response,args=(
@@ -377,7 +428,7 @@ def search_anime(request):
         'nrslts':len(ts),
         'smode':'Search Anime',
         'lastq':search_query,
-        'list':zip(ts,st,cs,fs,nfs),
+        'list':zip(ts,st,cs,fs,nfs,lens),
     }
 
     # return response with template and context
@@ -397,6 +448,7 @@ def search_youtube(request):
         cs=[]
         fs=[]
         nfs=[]
+        lens=[]
         if search_query:
             print(search_query)
             mode=('pytube','invidious')[1]
@@ -417,8 +469,8 @@ def search_youtube(request):
                     elif mode=='invidious':
                 # https://vid.puffyan.us//api/v1/search?q=ghost&fields=title,author,publishedText
                 # for i in range(5):
-                        url='https://vid.puffyan.us//api/v1/search?q='+requests.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText'
-                    # print(url)
+                        url='https://vid.puffyan.us//api/v1/search?q='+requests.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText,lengthSeconds'
+                        print(url)
                     # try:
                         r=rq.get(url)
                         rj=r.json()
@@ -433,6 +485,8 @@ def search_youtube(request):
                             cs.append(thumb)
                             fs.append('../addto_yt_queue/'+vid)
                             nfs.append('../removefrom_yt_queue/'+vid)
+                            leni=short_h_m_s(yv['lengthSeconds'])
+                            lens.append(leni)
                         break
                 except:
                     mode='pytube' if mode=='invidious' else 'invidious'
@@ -446,9 +500,13 @@ def search_youtube(request):
         'nrslts':len(ts),
         'smode':'Search YouTube',
         'lastq':search_query,
-        'list':zip(ts,st,cs,fs,nfs),
+        'list':zip(ts,st,cs,fs,nfs,lens),
     }
     return render(request, "search.html",context)
+
+def short_h_m_s(secs):
+    s=time.strftime('%H:%M:%S', time.gmtime(secs))
+    return s.lstrip('0').lstrip(':').lstrip('0')
 
 def search_series(request):
     global last_query
@@ -464,6 +522,7 @@ def search_series(request):
         cs=[]
         fs=[]
         nfs=[]
+        lens=[]
         if search_query:
             print(search_query)
             # queryurl=apiurl+'/search'+pathargs(keyw=search_query)
@@ -487,6 +546,7 @@ def search_series(request):
                     cs.append(qi['image'])
                     fs.append('../addto_fav/'+qi['id'])
                     nfs.append('../removefrom_fav/'+qi['id'])
+                    lens.append('')
 
                     last_query['series'][qi['id']]=False
                     threading.Thread(target=_down_query_response,args=(
@@ -505,7 +565,7 @@ def search_series(request):
         'smode':'Search Movies/TV',
         'nrslts':len(ts),
         'lastq':search_query,
-        'list':zip(ts,st,cs,fs,nfs),
+        'list':zip(ts,st,cs,fs,nfs,lens),
     }
     # return response with template and context
     # return render(request, "geeks.html", context)
@@ -1758,6 +1818,7 @@ def view_yt_queue(request):
         cs=[]
         fs=[]
         nfs=[]
+        lens=[]
         aids=db_yt_queue.load()
         sort=request.GET.get('sort', None)
         sort='False' if not sort else sort
@@ -1792,12 +1853,13 @@ def view_yt_queue(request):
                 cs.append(thumb)
                 fs.append('')
                 nfs.append('../removefrom_yt_queue/'+qi['videoId'])
+                lens.append(short_h_m_s(int(qi['lengthSeconds'])))
                 
     context ={
         'smode':'YouTube Queue',
         'sort':sort,
         'view':view,
-        'list':zip(ts,st,cs,fs,nfs),
+        'list':zip(ts,st,cs,fs,nfs,lens),
     }
     return render(request, "favs.html",context)
 

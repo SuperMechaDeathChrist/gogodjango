@@ -165,12 +165,14 @@
             </div>
             {% endfor %}
             {% else %}
-            {% for ti,sti,ci,fi,nfi in list %}
+            {% for ti,sti,ci,fi,nfi,leni in list %}
             <div class="item features-image сol-12 col-md-6 col-lg-3">
                 <div class="item-wrapper">
                     <div class="item-img">
-                        <!-- <img src="{% static 'assets/images/features1.jpg' %}" alt="Mobirise Website Builder"> -->
+                        <a style="color:#FAFAFA; background-color:black; text-align:center; display: block;margin-left: auto;margin-right: auto;width:100%;">
                         <img src="{{ci}}" alt="Mobirise Website Builder">
+                        {{leni}}
+                        </a>
                     </div>
                     <div class="item-content">
                         <h5 class="item-title mbr-fonts-style display-7">{{ti}}</h5>
@@ -189,7 +191,7 @@
             {% endif %}
         </div>
     </div>
-</section><section class="display-7" style="padding: 0;align-items: center;justify-content: center;flex-wrap: wrap;    align-content: center;display: flex;position: relative;height: 4rem;"><a href="https://mobiri.se/1487176" style="flex: 1 1;height: 4rem;position: absolute;width: 100%;z-index: 1;"><img alt="" style="height: 4rem;" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="></a><p style="margin: 0;text-align: center;" class="display-7">Built with &#8204;</p><a style="z-index:1" href="https://mobirise.com"> Free Web  Creation Software</a></section><script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>  <script src="{% static 'assets/smoothscroll/smooth-scroll.js' %}"></script>  <script src="{% static 'assets/ytplayer/index.js' %}"></script>  <script src="{% static 'assets/dropdown/js/navbar-dropdown.js' %}"></script><script src="{% static 'assets/theme/js/script.js' %}"></script>  
+</section><section class="display-7" style="padding: 0;align-items: center;justify-content: center;flex-wrap: wrap;    align-content: center;display: flex;position: relative;height: 4rem;"><a href="https://mobiri.se/1487176" style="flex: 1 1;height: 4rem;position: absolute;width: 100%;z-index: 1; background-color:#353535;"><img alt="" style="height: 4rem;" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="></a><p style="margin: 0;text-align: center;" class="display-7">Built with &#8204;</p><a style="z-index:1" href="https://mobirise.com"> Free Web  Creation Software</a></section><script src="{% static 'assets/bootstrap/js/bootstrap.bundle.min.js' %}"></script>  <script src="{% static 'assets/smoothscroll/smooth-scroll.js' %}"></script>  <script src="{% static 'assets/ytplayer/index.js' %}"></script>  <script src="{% static 'assets/dropdown/js/navbar-dropdown.js' %}"></script><script src="{% static 'assets/theme/js/script.js' %}"></script>  
   
   
 </body>

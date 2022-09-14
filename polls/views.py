@@ -1279,26 +1279,35 @@ def get_flixhq_ep(request):
         aid=request.GET.get('aid', None)
         # print(eid)
         # print(aid)
-        db_history.github_add
 
-        url_args=pathargs(episodeId=eid,server='vidcloud',mediaId=aid)
+        for iserver in ('vidcloud','upcloud','mixdrop'):
 
-        er=rq.get(apiconsu+'/movies/flixhq/watch'+url_args)
-        erj=er.json()
-        stream_url=erj['sources'][0]['url']
+            try:
+                url_args=pathargs(episodeId=eid,server=iserver,mediaId=aid)
 
-        try:
-            ans=erj['subtitles'][0]['url']
-            for sub in erj['subtitles']:
-                # print(sub)
-                if 'eng' in sub['lang'].lower()[0:4]:
-                    ans=sub['url']
-                    break
-            vtt=rq.get(ans)
-            ans=str_vtt_to_srt(vtt.text)
-            series_ep_cache[url_args]=ans
-        except:
-            series_ep_cache[url_args]=''
+                er=rq.get(apiconsu+'/movies/flixhq/watch'+url_args)
+                erj=er.json()
+                stream_url=erj['sources'][0]['url']
+                validurl=True
+            except:
+                validurl=False
+
+            try:
+                raise NotImplementedError
+                ans=erj['subtitles'][0]['url']
+                for sub in erj['subtitles']:
+                    # print(sub)
+                    if 'eng' in sub['lang'].lower()[0:4]:
+                        ans=sub['url']
+                        break
+                vtt=rq.get(ans)
+                ans=str_vtt_to_srt(vtt.text)
+                series_ep_cache[url_args]=ans
+            except:
+                series_ep_cache[url_args]=''
+
+            if validurl:
+                break
 
         threading.Thread(target=db_history.github_add,args=(aid,dict(source='flixhq',episode=eid),gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)

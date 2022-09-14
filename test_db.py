@@ -10,8 +10,8 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 
-dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
-db_flixhq.printdb()
+# dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
+# db_flixhq.printdb()
 # #dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
 # for k in dbo:
 # 	if k:
@@ -40,7 +40,7 @@ db_flixhq.printdb()
 # dbo=db_query.github_download(gittoken,gitrepo)
 # print(dbo)
 
-# import db_history
+import db_history
 
 # # db_history.wipe()
 # # dbo=db_history.load()
@@ -48,12 +48,18 @@ db_flixhq.printdb()
 # # dbo['animes']={}
 # # db_history.github_save(dbo,gittoken,gitrepo)
 
-# dbo=db_history.github_download(gittoken,gitrepo)
+dbo=db_history.github_download(gittoken,gitrepo)
 # # print(dbo)
 # db_history.printdb()
 # k,v=db_history.search('kgt2ba9u4zy')
 # print(k)
 # db_history.github_remove(k,gittoken,gitrepo)
+db_history.printdb()
+
+for k in dbo:
+	print(k)
+
+# db_history.github_remove(k,token=gittoken,repo=gitrepo)
 
 # import db_yt_queue
 
@@ -65,4 +71,4 @@ db_flixhq.printdb()
 # for k in dbo:
 # 	if k:
 # 		print(k,dbo[k])
-# db_yt_queue.printdb()
+# db_yt_queue.printdb()v

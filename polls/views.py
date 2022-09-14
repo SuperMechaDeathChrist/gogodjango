@@ -1279,6 +1279,8 @@ def get_flixhq_ep(request):
         aid=request.GET.get('aid', None)
         # print(eid)
         # print(aid)
+        if '"' in aid:
+            aid=aid.split('"')[0]
 
         for iserver in ('vidcloud','upcloud','mixdrop'):
 
@@ -1308,8 +1310,8 @@ def get_flixhq_ep(request):
 
             if validurl:
                 break
-
-        threading.Thread(target=db_history.github_add,args=(aid,dict(source='flixhq',episode=eid),gittoken,gitrepo,)).start()
+        if validurl:
+            threading.Thread(target=db_history.github_add,args=(aid,dict(source='flixhq',episode=eid),gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
     else:
         url='http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'

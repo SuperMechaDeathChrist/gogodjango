@@ -55,6 +55,7 @@ urlpatterns = [
     path('addto_yt_queue/<str:aid>/',views.addto_yt_queue),
     path('get_yt_stream/',views.get_yt_stream),
     path('feed_yt_queue/',views.feed_yt_queue),
+    path('feed_yt_channel/',views.feed_yt_channel),
     path('view_yt_queue/',views.view_yt_queue),
     
     path('history_youtube/',views.history_youtube),

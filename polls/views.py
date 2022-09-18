@@ -708,6 +708,60 @@ def update_last_query():
     global last_query
     last_query=db_query.github_download(gittoken,gitrepo)
 
+yt_channels={
+    'vinesauce':'UCzORJV8l3FWY4cFO8ot-F2w',
+    'RedLetterMedia':'UCrTNhL_yO3tPTdQ5XgmmWjA',
+    'Cinemassacre':'UC0M0rxSz3IF0CsSour1iWmw',
+    'FanboyFlicks':'UCpsjEC4PlHmhM84yX5Y3rrg',
+    'Internet Comment Etiquette with Erik':'UCyWDmyZRjrGHeKF-ofFsT5Q',
+    'Boy boy':'UC_S45UpAYVuc0fYEcHN9BVQ',
+    'I did a thing':'UCJLZe_NoiG0hT7QCX_9vmqw',
+    'H3 Pocdast':'UCLtREJY21xRfCuEKvdki1Kw',
+    'HasanAbi':'UCtoaZpBnrd0lhycxYJ4MNOQ',
+    'Channel 5 with Andrew Callaghan':'UC-AQKm7HUNMmxjdS371MSwg',
+    'Hasanabi Moments':'UCobue-_fUPSIwdWULdE3MbQ',
+    'Stoned Gremlin Productions':'UCIO689mgXeuzH4M5NS7wZwg',
+    'Ryan George':'UCh9IfI45mmk59eDvSWtuuhQ',
+    'Pitch Meeting':'UC9Kq-yEt1iYsbUzNOoIRK0g',
+    'El Pulso De La República':'UCK0_zBeybLuyXbOcHp7wmJA',
+    'Wisecrack':'UC6-ymYjG0SU0jUWnWh9ZzEQ',
+    'Screen Junkies':'UCOpcACMWblDls9Z6GERVi1A',
+    'Steve Reviews':'UCqERpXggAprNW8QT_WO1N5Q',
+    'Cold Ones':'UCfbnTUxUech4P1XgYUwYuKA',
+    'Vargskelethor Uncut: Full Joel Streams':'UCRNCUBq676nUhXyy8AJzD5w',
+    'Vargskelethor Joel: Mini Highlights':'UC1O1dhQcJQTycjcoeTSiuuw',
+    'Vargskelethor Joel':'UCllm3HivMERwu2x2Sjz5EIg',
+    'Vinesauce: The Full Sauce':'UC2_IYqb1Tc_8Azh7rByedPA',
+    'RevScarecrow: After Hours':'UCSNF0FG_I8NboKf0H7Xn1CQ',
+    'Revscarecrow: Vinesauce Rev':'UC_qjBu445WM4dulK392K6ww',
+    'Billiam':'UCcHBw_Rs56RFcisYAOlFfmQ',
+    'Jordan Fringe':'UCJKE87wqkVvbP2hUJcAKJNw',
+    'Funny Or Die':'UCzS3-65Y91JhOxFiM7j6grg',
+    'SaberSpark':'UCeGGpOehPGG7vQMUVc7tG8Q',
+    'Cofeezilla':'UCFQMnBA3CS502aghlcr0_aw',
+    'Kitboga':'UCm22FAXZMw1BaWeFszZxUKw',
+    'Ink Master':'UCzrh2s9Vu9wUBf2Y2iIYcgA',
+    'Jeremy Jahns':'UC7v3-2K1N84V67IF-WTRG-Q',
+    'JoshDub':'UC9DWJ33CMvIseLlyx6hyRnA',
+    'My Thoughts Will Probably Offend You':'UCbR-GzksKvEc1dgqvMG1QtQ',
+    'Observe':'UCzMvqwt21xqm7Fg5Uo3lsRQ',
+    'Phelan Porteous':'UCUp4yFAjgOA11a4h568vnrA',
+    'Philip DeFranco':'UClFSU9_bUb4Rc6OYfTt5SPw',
+    'radiOvni':'UCphRaBOm68qyxK2rNiEmDhQ',
+    'Some More News':'UCvlj0IzjSnNoduQF0l3VGng',
+    'TheWizWiki':'UClh9mrZULUGRQf-2oqPnPaw',
+    'WatchMojo':'UCaWd5_7JhbQBe4dknZhsHJg',
+    'Aamon Animations':'UCo4au6lRX4-_gIczBneEZWA',
+    'Alien\'s Guide':'UCu6DDGoV21YhwSb5iWbriAw',
+    'Cynical Reviews':'UC1DCPS2j-o0bvfIilkc8RSw',
+    'Darkar Company Studios':'UCmyIMuo8zRYgLshDff0vLuw',
+    'Elvis The Alien':'UChc-m3saf8K2oJHDSsnsj_A',
+    'Grimmjack':'UC23jPAIN8bbs7zphtB-JdLQ',
+    'UpIsNotJump':'UCFLwN7vRu8M057qJF8TsBaA',
+    'Vivziepop':'UCzfyYtgvkx5mLy8nlLlayYg',
+    'Your Narrator':'UChfYPe-r_5EMHbBMT-YuYsA',
+    }
+
 def categories(request):
     x=threading.Thread(target=update_fav_anime)
     x.start()
@@ -734,8 +788,35 @@ def categories(request):
     <category title="YouTube" description="" sd_img="pkg:/images/YouTube.png" hd_img="pkg:/images/YouTube.png">
         <categoryLeaf title="Queue" description="" feed="{dj}/polls/feed_yt_queue/"/>
         <categoryLeaf title="History" description="" feed="{dj}/polls/history_youtube/"/>
-    </category>
-    
+    </category>'''
+    # ans+='''
+    # <category title="YouTube Channels" description="" sd_img="pkg:/images/YouTube.png" hd_img="pkg:/images/YouTube.png">'''
+    cpack=''
+    i=0
+
+    for ci in sorted(yt_channels,key=lambda i: i[0].lower()):
+        cid=yt_channels[ci]
+        cpack+=f'''
+        <categoryLeaf title="{ci}" description="" feed="{dj}/polls/feed_yt_channel/?cid={cid}"/>'''
+        i+=1
+        if i==1:
+            letteri=ci[0].upper()
+        elif i==11:
+            i=0
+            letterf=ci[0].upper()
+            ans+=f'''
+    <category title="YouTube Channels {letteri}-{letterf}" description="" sd_img="pkg:/images/YouTube.png" hd_img="pkg:/images/YouTube.png">'''
+            ans+=cpack+'''
+    </category>'''
+            cpack=''
+
+    if i<10:
+        letterf=ci[0].upper()
+        ans+=f'''
+    <category title="YouTube Channels {letteri}-{letterf}" description="" sd_img="pkg:/images/YouTube.png" hd_img="pkg:/images/YouTube.png">'''
+        ans+=cpack+'''
+    </category>'''
+    ans+=f'''
     <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Movies_TV.png" hd_img="pkg:/images/Movies_TV.png">
         <categoryLeaf title="Favorite Movies" description="" feed="{dj}/polls/favorite_movies/"/>
         <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
@@ -752,6 +833,74 @@ def categories(request):
  </categories>
 '''
     return HttpResponse(ans,content_type='text/xml')
+
+def feed_yt_channel(request):
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+    base_url=dj+'/polls/get_yt_stream/'
+    
+    # aids=db_yt_queue.load()
+
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+
+    cid=request.GET.get('cid', None)
+    # try:
+    #     cid=yt_channels[cid]
+    # except:
+    #     pass
+
+    fields='?fields=author,authorId,authorThumbnails,description,subCount,latestVideos'
+    inst='https://vid.puffyan.us/api/v1'
+    headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36"}
+
+    url=inst+'/channels/'+cid+fields
+    # print(url)
+    rj=rq.get(url,headers=headers).json()
+
+    for a in rj['latestVideos']:
+
+    # for aid in aids:
+        # if not aid:
+            # continue
+        # try:
+        #     a=aids[aid]['response']
+        # except:
+        #     yv=pytube.YouTube('?v='+aid)
+            # a=yv.vid_info['videoDetails']
+        # title=rk.titlexml(a['title']).replace('&quot;','"')
+        title=a['title']
+        thumbnail='https://i.ytimg.com/vi/'+a['videoId']+'/hqdefault.jpg'
+
+        item=addto(root,feed,'item',attr=dict(
+            sdImg=thumbnail,
+            hdImg=thumbnail
+            ))
+
+        addto(root,item,'title',title)
+        addto(root,item,'contentId',a['videoId'])
+        addto(root,item,'contentType','Episode')
+        addto(root,item,'contentQuality','HD')
+        addto(root,item,'streamFormat','mp4')
+        media=addto(root,item,'media')
+        url_args=pathargs(aid=a['videoId'])
+        addto(root,media,'streamUrl',base_url+url_args)
+        # desc=a['shortDescription']
+        desc=a['publishedText']+'\n'+'Duration: '+ short_h_m_s(a['lengthSeconds'])+'\n'+format(a['viewCount'],',')+str(' views ')
+
+        addto(root,item,'synopsis',
+            desc
+            )
+        try:
+            addto(root,item,'genres',a['author'])
+        except:
+            addto(root,item,'genres','')
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
+    return HttpResponse(xml_str,content_type='text/xml')
 
 def recent_gogo(dj,rtype='/recent-release'):
     r=rq.get(apiurl+rtype)
@@ -1491,6 +1640,7 @@ def favorite_movies(request):
 
 def get_yt_stream(request,):
     aid=request.GET.get('aid', None)
+    isqueue=request.GET.get('queue',None)
     if aid:
         print(aid)
         yv=pytube.YouTube('?v='+aid)
@@ -1510,7 +1660,8 @@ def get_yt_stream(request,):
                 if 'video/mp4' in st['type']:
                     stream_url= st['url']
         threading.Thread(target=db_history.github_add,args=(aid,dict(source='youtube',episode=yv.video_id),gittoken,gitrepo,)).start()
-        threading.Thread(target=db_yt_queue.github_remove,args=(aid,gittoken,gitrepo,)).start()
+        if isqueue:
+            threading.Thread(target=db_yt_queue.github_remove,args=(aid,gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
     else:
         return HttpResponse('Error')
@@ -1551,7 +1702,7 @@ def feed_yt_queue(request):
         addto(root,item,'contentQuality','HD')
         addto(root,item,'streamFormat','mp4')
         media=addto(root,item,'media')
-        url_args=pathargs(aid=a['videoId'])
+        url_args=pathargs(aid=a['videoId'],queue='1')
         addto(root,media,'streamUrl',base_url+url_args)
         desc=a['shortDescription']
 

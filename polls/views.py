@@ -839,9 +839,9 @@ def feed_yt_channel(request):
         dj=request.build_absolute_uri().replace(request.path,'')
     else:
         dj=''
-    base_url=dj+'/polls/get_yt_stream/'
     if '?' in dj:
         dj=dj.split('?')[0]
+    base_url=dj+'/polls/get_yt_stream/'
     # aids=db_yt_queue.load()
 
     root = minidom.Document()

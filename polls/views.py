@@ -840,7 +840,8 @@ def feed_yt_channel(request):
     else:
         dj=''
     base_url=dj+'/polls/get_yt_stream/'
-    
+    if '?' in dj:
+        dj=dj.split('?')[0]
     # aids=db_yt_queue.load()
 
     root = minidom.Document()
@@ -852,6 +853,7 @@ def feed_yt_channel(request):
     #     cid=yt_channels[cid]
     # except:
     #     pass
+    
 
     fields='?fields=author,authorId,authorThumbnails,description,subCount,latestVideos'
     inst='https://vid.puffyan.us/api/v1'
@@ -1385,10 +1387,10 @@ def addto_fav_series(request,ctype,id):
         if request: return HttpResponse(_html_added('Failiure!','not added',aid))
 def removefrom_fav_anime(request,aid):
     dj=request.build_absolute_uri().replace(request.path,'')
-    print(dj)
+    # print(dj)
     if '?' in dj:
         dj=dj.split('?')[0]
-    print(dj)
+    # print(dj)
     if db.github_remove(aid,gittoken,gitrepo):
         # if request: return HttpResponse("Success: removed "+aid)
         if request: return HttpResponse(_html_added('Success!','removed',aid,dj+'/polls/search_fav_anime'))

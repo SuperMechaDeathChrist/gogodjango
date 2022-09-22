@@ -1649,11 +1649,18 @@ def get_yt_stream(request,):
         try:
             stream_url=''
             if not stream_url:
-                ydl_opts = {'format':'bestvideo[height<1080]+bestaudio/best[height<1080]'}
+                # localhost:3000/polls/get_yt_stream/?aid=Q6Ue8YIKhFc
+                # ydl_opts = {'format':'bestvideo[height<=1080,ext=mp4]'}
+                ydl_opts={}
                 with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(
                         'https://www.youtube.com/watch?v='+aid, download=False)
-                    stream_url= info['formats'][0]['url']
+                    for st in info['formats']:
+                        # print(st)
+                        if st['format_note']:
+                            # res=int(st['format_note'].replace('p',''))
+                            if st['ext']=='mp4' and st['asr']:
+                                stream_url= st['url']
             if not stream_url:
                 yv=pytube.YouTube('https://www.youtube.com/watch?v='+aid)
                 for st in yv.streams.filter(file_extension='mp4',progressive=True):

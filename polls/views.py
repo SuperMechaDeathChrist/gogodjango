@@ -20,6 +20,7 @@ import random
 import unicodedata
 import rklpy_lib as rk
 import traceback
+import youtube_dl
 
 from api.settings import last_query,series_ep_cache,last_watched_cache
 
@@ -886,7 +887,7 @@ def feed_yt_channel(request):
         addto(root,item,'contentId',a['videoId'])
         addto(root,item,'contentType','Episode')
         addto(root,item,'contentQuality','HD')
-        addto(root,item,'streamFormat','mp4')
+        addto(root,item,'streamFormat','hls')
         media=addto(root,item,'media')
         url_args=pathargs(aid=a['videoId'])
         addto(root,media,'streamUrl',base_url+url_args)
@@ -1647,10 +1648,18 @@ def get_yt_stream(request,):
         print(aid)
         yv=pytube.YouTube('?v='+aid)
         try:
+            stream_url=''
             for st in yv.streams.filter(file_extension='mp4',progressive=True):
                 if st.mime_type=='video/mp4':
                     stream_url=st.url
+            if not stream_url:
+                ydl_opts = {'format':'bestvideo[height<1080]+bestaudio/best[height<1080]'}
+                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(
+                        f'https://www.youtube.com/watch?v={aid}', download=False)
+                    stream_url= info['formats'][0]['url']
         except:
+            traceback.print_exc()
             try:
                 r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
                 rj=r.json()
@@ -1702,7 +1711,7 @@ def feed_yt_queue(request):
         addto(root,item,'contentId',aid)
         addto(root,item,'contentType','Episode')
         addto(root,item,'contentQuality','HD')
-        addto(root,item,'streamFormat','mp4')
+        addto(root,item,'streamFormat','hls')
         media=addto(root,item,'media')
         url_args=pathargs(aid=a['videoId'],queue='1')
         addto(root,media,'streamUrl',base_url+url_args)
@@ -2075,7 +2084,7 @@ def history_youtube(request):
         addto(root,item,'contentId',aid)
         addto(root,item,'contentType','Episode')
         addto(root,item,'contentQuality','HD')
-        addto(root,item,'streamFormat','mp4')
+        addto(root,item,'streamFormat','hls')
         media=addto(root,item,'media')
         url_args=pathargs(aid=a['videoId'])
         addto(root,media,'streamUrl',base_url+url_args)

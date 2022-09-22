@@ -1646,18 +1646,21 @@ def get_yt_stream(request,):
     isqueue=request.GET.get('queue',None)
     if aid:
         print(aid)
-        yv=pytube.YouTube('?v='+aid)
         try:
             stream_url=''
-            for st in yv.streams.filter(file_extension='mp4',progressive=True):
-                if st.mime_type=='video/mp4':
-                    stream_url=st.url
             if not stream_url:
                 ydl_opts = {'format':'bestvideo[height<1080]+bestaudio/best[height<1080]'}
                 with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(
-                        f'https://www.youtube.com/watch?v={aid}', download=False)
+                        'https://www.youtube.com/watch?v='+aid, download=False)
                     stream_url= info['formats'][0]['url']
+            if not stream_url:
+                yv=pytube.YouTube('https://www.youtube.com/watch?v='+aid)
+                for st in yv.streams.filter(file_extension='mp4',progressive=True):
+                    if st.mime_type=='video/mp4':
+                        stream_url=st.url
+                if not stream_url:
+                    raise FileNotFoundError
         except:
             traceback.print_exc()
             try:

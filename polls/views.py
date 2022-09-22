@@ -2061,7 +2061,7 @@ def history_youtube(request):
         if dbo[aid]['source']!='youtube':
             continue
         ii+=1
-        if ii>25:
+        if ii>60:
             # dbo.pop(aid,None)
             break
         try:

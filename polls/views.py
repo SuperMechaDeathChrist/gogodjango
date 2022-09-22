@@ -1649,40 +1649,44 @@ def get_yt_stream(request,):
         try:
             stream_url=''
             if not stream_url:
-                # localhost:3000/polls/get_yt_stream/?aid=Q6Ue8YIKhFc
-                # ydl_opts = {'format':'bestvideo[height<=1080,ext=mp4]'}
-                ydl_opts={}
-                with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(
-                        'https://www.youtube.com/watch?v='+aid, download=False)
-                    for st in info['formats']:
-                        # print(st)
-                        if st['format_note']:
-                            # res=int(st['format_note'].replace('p',''))
-                            if st['ext']=='mp4' and st['asr']:
-                                stream_url= st['url']
-            if not stream_url:
                 yv=pytube.YouTube('https://www.youtube.com/watch?v='+aid)
                 for st in yv.streams.filter(file_extension='mp4',progressive=True):
                     if st.mime_type=='video/mp4':
                         stream_url=st.url
-                if not stream_url:
-                    raise FileNotFoundError
+            if not stream_url:
+                raise FileNotFoundError
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             try:
-                r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
-                rj=r.json()
+                try:
+                    r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+                    rj=r.json()
+                except:
+                    time.sleep(1.5)
+                    r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+                    rj=r.json()
+                for st in rj['formatStreams']:
+                    if 'video/mp4' in st['type']:
+                        stream_url= st['url']
             except:
-                time.sleep(1.5)
-                r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
-                rj=r.json()
-            for st in rj['formatStreams']:
-                if 'video/mp4' in st['type']:
-                    stream_url= st['url']
-        threading.Thread(target=db_history.github_add,args=(aid,dict(source='youtube',episode=aid),gittoken,gitrepo,)).start()
-        if isqueue:
-            threading.Thread(target=db_yt_queue.github_remove,args=(aid,gittoken,gitrepo,)).start()
+                traceback.print_exc()
+                if not stream_url:
+                    # localhost:3000/polls/get_yt_stream/?aid=Q6Ue8YIKhFc
+                    # ydl_opts = {'format':'bestvideo[height<=1080,ext=mp4]'}
+                    ydl_opts={}
+                    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                        info = ydl.extract_info(
+                            'https://www.youtube.com/watch?v='+aid, download=False)
+                        for st in info['formats']:
+                            # print(st)
+                            if st['format_note']:
+                                # res=int(st['format_note'].replace('p',''))
+                                if st['ext']=='mp4' and st['asr']:
+                                    stream_url= st['url']
+        if stream_url:
+            threading.Thread(target=db_history.github_add,args=(aid,dict(source='youtube',episode=aid),gittoken,gitrepo,)).start()
+            if isqueue:
+                threading.Thread(target=db_yt_queue.github_remove,args=(aid,gittoken,gitrepo,)).start()
         return redirect(stream_url,permanent=True)
     else:
         return HttpResponse('Error')

@@ -38,8 +38,9 @@ import db_flixhq_home
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
-# apiconsu='https://rokuconsumet.herokuapp.com'
-apiconsu='https://consumet-api.herokuapp.com'
+apiconsu='https://rokuconsumet.herokuapp.com'
+# apiconsu='https://consumet-api.herokuapp.com'
+
 
 from cryptography.fernet import Fernet
 key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
@@ -766,11 +767,11 @@ yt_channels={
     }
 
 def categories(request):
+    threading.Thread(target=update_feed_flixhq_home).start()
     x=threading.Thread(target=update_fav_anime)
     x.start()
     y=threading.Thread(target=update_fav_series)
     y.start()
-
     threading.Thread(target=update_last_query).start()
 
     # with open(r"C:\c\Python_projects\anime_site\api\polls\categories.xml", 'r',encoding='utf-8') as fid:
@@ -2201,7 +2202,7 @@ def launch_channel(request):
     # return s
     return HttpResponse(s)
 
-def update_feed_flixhq_home(request):
+def update_feed_flixhq_home(request=None):
     dbh=db_flixhq_home.load()
 
     dbo=db_flixhq_all.github_download(gittoken,gitrepo)

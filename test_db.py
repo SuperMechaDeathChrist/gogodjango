@@ -2,7 +2,7 @@ import requests
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
 import db_flixhq
 # import db
-
+import time
 from cryptography.fernet import Fernet
 key=b'wnuSKeQm1WLsf0qtmWVyoknqEhvrNXqj1RKewiwJFDE='
 encMessage=b'gAAAAABi7tt3uuCl4P2d_m1JpvKUZuTBK7SMGuJqlJVRTIhsFhUFjLCe_kf2veI7iWNuEZpT2jCYhJE7MBhV990S4fu4iS81zpb29e41MAleVgIdZT6xSe5y6kcfTzkM_MW81n9cU08O'
@@ -14,8 +14,11 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 # dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
 # db_flixhq.printdb()
 # #dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
+
 # for k in dbo:
 # 	if k:
+		# db_flixhq_all.add(k,dbo[k])
+# 		print(k,dbo[k]['response']['episodes'])
 # 		# print(k,dbo[k]['response']['episodes'])
 # 		# print('\n'*10)
 # 		# http://192.168.0.34:3000/polls/addto_fav
@@ -79,28 +82,50 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 
 
 
-import db_yt_channels as db
-# db_yt_channels.wipe()
-db.wipe()
-yt_channels={
-    'vinesauce':'UCzORJV8l3FWY4cFO8ot-F2w',
-    'RedLetterMedia':'UCrTNhL_yO3tPTdQ5XgmmWjA',
-    'Cinemassacre':'UC0M0rxSz3IF0CsSour1iWmw',
-    'FanboyFlicks':'UCpsjEC4PlHmhM84yX5Y3rrg',
-    'Internet Comment Etiquette with Erik':'UCyWDmyZRjrGHeKF-ofFsT5Q',
-    'Boy boy':'UC_S45UpAYVuc0fYEcHN9BVQ',
-    'I did a thing':'UCJLZe_NoiG0hT7QCX_9vmqw',
-    'H3 Pocdast':'UCLtREJY21xRfCuEKvdki1Kw',
-    'HasanAbi':'UCtoaZpBnrd0lhycxYJ4MNOQ',
-    'Channel 5 with Andrew Callaghan':'UC-AQKm7HUNMmxjdS371MSwg',
-    'Hasanabi Moments':'UCobue-_fUPSIwdWULdE3MbQ',
-    'Stoned Gremlin Productions':'UCIO689mgXeuzH4M5NS7wZwg',
-    'Ryan George':'UCh9IfI45mmk59eDvSWtuuhQ',
-    'Pitch Meeting':'UC9Kq-yEt1iYsbUzNOoIRK0g',
-    'El Pulso De La República':'UCK0_zBeybLuyXbOcHp7wmJA',
-    'Wisecrack':'UC6-ymYjG0SU0jUWnWh9ZzEQ',
-    'Screen Junkies':'UCOpcACMWblDls9Z6GERVi1A',
-    'Steve Reviews':'UCqERpXggAprNW8QT_WO1N5Q',
-    'Cold Ones':'UCfbnTUxUech4P1XgYUwYuKA',
-    }
+# import db_yt_channels as db
+# # db_yt_channels.wipe()
+# db.wipe()
+# yt_channels={
+#     'vinesauce':'UCzORJV8l3FWY4cFO8ot-F2w',
+#     'RedLetterMedia':'UCrTNhL_yO3tPTdQ5XgmmWjA',
+#     'Cinemassacre':'UC0M0rxSz3IF0CsSour1iWmw',
+#     'FanboyFlicks':'UCpsjEC4PlHmhM84yX5Y3rrg',
+#     'Internet Comment Etiquette with Erik':'UCyWDmyZRjrGHeKF-ofFsT5Q',
+#     'Boy boy':'UC_S45UpAYVuc0fYEcHN9BVQ',
+#     'I did a thing':'UCJLZe_NoiG0hT7QCX_9vmqw',
+#     'H3 Pocdast':'UCLtREJY21xRfCuEKvdki1Kw',
+#     'HasanAbi':'UCtoaZpBnrd0lhycxYJ4MNOQ',
+#     'Channel 5 with Andrew Callaghan':'UC-AQKm7HUNMmxjdS371MSwg',
+#     'Hasanabi Moments':'UCobue-_fUPSIwdWULdE3MbQ',
+#     'Stoned Gremlin Productions':'UCIO689mgXeuzH4M5NS7wZwg',
+#     'Ryan George':'UCh9IfI45mmk59eDvSWtuuhQ',
+#     'Pitch Meeting':'UC9Kq-yEt1iYsbUzNOoIRK0g',
+#     'El Pulso De La República':'UCK0_zBeybLuyXbOcHp7wmJA',
+#     'Wisecrack':'UC6-ymYjG0SU0jUWnWh9ZzEQ',
+#     'Screen Junkies':'UCOpcACMWblDls9Z6GERVi1A',
+#     'Steve Reviews':'UCqERpXggAprNW8QT_WO1N5Q',
+#     'Cold Ones':'UCfbnTUxUech4P1XgYUwYuKA',
+#     }
 
+
+
+import db_flixhq_all
+# db_flixhq_all.printdb()
+
+# # print(db_flixhq_all.load()['']['saved'],time.time(),(time.time()-db_flixhq_all.load()['']['saved']))
+
+# # import db_flixhq_home
+# # db_flixhq_home.wipe()
+
+# dbo=db_flixhq_all.load()
+# for k in dbo:
+# 	if k:
+# 		if not 'response' in dbo[k]:
+# 			dbo[k]={'response':dbo[k]}
+
+# db_flixhq_all.github_save(dbo,gittoken,gitrepo)
+
+import db_flixhq_home
+
+for k in db_flixhq_home.load():
+	print(k)

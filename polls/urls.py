@@ -62,5 +62,10 @@ urlpatterns = [
     path('removefrom_yt_queue/<str:aid>/',views.removefrom_yt_queue),
     path('view/',views.view),
 
+    path('update_feed_flixhq_home',views.update_feed_flixhq_home),
+    path('flixhq_trending/',views.flixhq_trending),
+    path('flixhq_latest_series/',views.flixhq_latest_series),
+    path('flixhq_latest_movies/',views.flixhq_latest_movies),
+
 ]
 

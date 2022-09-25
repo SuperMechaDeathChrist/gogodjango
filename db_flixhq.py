@@ -1,4 +1,5 @@
 dbpath='db_flixhq.dat'
+dbpath='db_flixhq_all.dat'
 import pickle
 from github import Github
 import unicodedata
@@ -90,6 +91,7 @@ def github_get_sha(token,repo):
         return contents.sha
 
 def github_save(dbo,token,repo):
+    dbo['']['saved']=time.time()
     g = Github(token)
     try:
         repo = g.get_repo(repo)
@@ -138,12 +140,14 @@ def printdb(exclude=()):
                 if e in dbo[key]:
                     dbo[key].pop(e,None)
                 pass
+        print('-'*20)
         print('>>',key,':',dbo[key])
     print('}')
     print('+'*20)
 
 def save(dbo):
     # dbo=load()
+    # dbo['']['saved']=time.time()
     pickle.dump(dbo,open(dbpath,'wb'))
 
 def add(key,value):

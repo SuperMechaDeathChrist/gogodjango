@@ -23,7 +23,7 @@ import traceback
 import youtube_dl
 
 from api.settings import last_query,series_ep_cache,last_watched_cache
-
+from bs4 import BeautifulSoup
 from xml.dom import minidom
 import pytube
 # import imdb
@@ -33,6 +33,8 @@ import db_flixhq
 import db_query
 import db_history
 import db_yt_queue
+import db_flixhq_all
+import db_flixhq_home
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
@@ -777,14 +779,32 @@ def categories(request):
     ans=f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <categories>
 
-      <!-- banner_ad: optional element which displays an at the top level category screen -->
-      <banner_ad sd_img="https://devtools.web.roku.com/videoplayer/images/missing.png" hd_img="https://devtools.web.roku.com/videoplayer/images/missing.png"/>
+    <!-- banner_ad: optional element which displays an at the top level category screen -->
+    <banner_ad sd_img="https://devtools.web.roku.com/videoplayer/images/missing.png" hd_img="https://devtools.web.roku.com/videoplayer/images/missing.png"/>
 
-     <category title="Gogoanime" description="Anime" sd_img="pkg:/images/gogoanime.jpg" hd_img="pkg:/images/gogoanime.jpg">
+    <category title="Gogoanime" description="Anime" sd_img="pkg:/images/gogoanime.jpg" hd_img="pkg:/images/gogoanime.jpg">
         <categoryLeaf title="-Recent release-" description="" feed="{dj}/polls/recent_anime/"/>
         <categoryLeaf title="Top airing" description="" feed="{dj}/polls/top_airing_anime/"/>
         <categoryLeaf title="DUB" description="" feed="{dj}/polls/recent_anime_dub/"/>
         <categoryLeaf title="CHINESE" description="" feed="{dj}/polls/recent_anime_chinese/"/>
+    </category>
+    <category title="FlixHQ" description="Free Movies and Series" sd_img="pkg:/images/flixhq.jpg" hd_img="pkg:/images/flixhq.jpg">
+        <categoryLeaf title="Trending" description="" feed="{dj}/polls/flixhq_trending/"/>
+        <categoryLeaf title="Latest Movies" description="" feed="{dj}/polls/flixhq_latest_movies/"/>
+        <categoryLeaf title="Latest Series" description="" feed="{dj}/polls/flixhq_latest_series/"/>
+    </category>
+    <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Movies_TV.png" hd_img="pkg:/images/Movies_TV.png">
+        <categoryLeaf title="Favorite Movies" description="" feed="{dj}/polls/favorite_movies/"/>
+        <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
+        <categoryLeaf title="Last watched episodes" description="" feed="{dj}/polls/history_series/"/>
+    </category>
+    <category title="Favorite Animes" description="Animes/OVAs/Anime movies" sd_img="pkg:/images/Favorite_anime" hd_img="pkg:/images/Favorite_anime.png">
+        <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
+        <categoryLeaf title="Last watched" description="" feed="{dj}/polls/history_anime/"/>
+    </category>
+    <category title="Search" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
+        <categoryLeaf title="Last searched series" description="" feed="{dj}/polls/last_query_series/"/>
+        <categoryLeaf title="Last searched animes" description="" feed="{dj}/polls/last_query_animes/"/>
     </category>
     <category title="YouTube" description="" sd_img="pkg:/images/YouTube.png" hd_img="pkg:/images/YouTube.png">
         <categoryLeaf title="Queue" description="" feed="{dj}/polls/feed_yt_queue/"/>
@@ -818,20 +838,7 @@ def categories(request):
         ans+=cpack+'''
     </category>'''
     ans+=f'''
-    <category title="Favorite Movies and TV" description="Series/movies" sd_img="pkg:/images/Movies_TV.png" hd_img="pkg:/images/Movies_TV.png">
-        <categoryLeaf title="Favorite Movies" description="" feed="{dj}/polls/favorite_movies/"/>
-        <categoryLeaf title="Favorite Series" description="" feed="{dj}/polls/favorite_series/"/>
-        <categoryLeaf title="Last watched episodes" description="" feed="{dj}/polls/history_series/"/>
-    </category>
-    <category title="Favorite Animes" description="Animes/OVAs/Anime movies" sd_img="pkg:/images/Favorite_anime" hd_img="pkg:/images/Favorite_anime.png">
-        <categoryLeaf title="Favorite Animes" description="" feed="{dj}/polls/favorite_anime/"/>
-        <categoryLeaf title="Last watched" description="" feed="{dj}/polls/history_anime/"/>
-    </category>
-    <category title="Search" description="https://rb.gy/8bz69s" sd_img="pkg:/images/qrsearch.png" hd_img="pkg:/images/qrsearch.png">
-        <categoryLeaf title="Last searched series" description="" feed="{dj}/polls/last_query_series/"/>
-        <categoryLeaf title="Last searched animes" description="" feed="{dj}/polls/last_query_animes/"/>
-    </category>
- </categories>
+</categories>
 '''
     return HttpResponse(ans,content_type='text/xml')
 
@@ -1151,6 +1158,8 @@ def _down_response(curl,aid,dbid):
             anime_results[aid]=dict(response=a)
         print(curl)
     except:
+        print(curl)
+        print(r.text)
         traceback.print_exc()
 
 
@@ -1371,7 +1380,7 @@ def addto_fav_series(request,ctype,id):
         # print('<>'*30)
         # print(aid)
         r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
-        a=r.json()        
+        a=r.json()
         # db_flixhq.add(aid,dict(
         #     response=a,
         #     ))
@@ -1741,6 +1750,7 @@ def feed_yt_queue(request):
 
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
+
 
 def last_query_series(request):
     # global last_query
@@ -2190,3 +2200,305 @@ def launch_channel(request):
 
     # return s
     return HttpResponse(s)
+
+def update_feed_flixhq_home(request):
+    dbh=db_flixhq_home.load()
+
+    dbo=db_flixhq_all.github_download(gittoken,gitrepo)
+    do_save=bool(abs(time.time()-dbo['']['saved'])/60>30)
+    print((time.time()-dbo['']['saved'])/60)
+    dboo=dbo.copy()
+    headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36"}
+    r=rq.get('https://flixhq.to/home')
+    bs = BeautifulSoup(r.text.replace('block_area block_area_home section-id-01','block_area block_area_home section-id-02'),features='lxml')
+    for sect in bs.find_all('section',{'class':'block_area block_area_home section-id-02'}):
+        sect_title=sect.find_all('h2',{'class':'cat-heading'})[0].text
+        if sect_title=='Coming Soon':
+            continue
+        # print(sect_title)
+        sect_vids={}
+        for a in sect.find_all('div', {"class": "flw-item"}):
+            # print('-'*20)
+            det=a.find_all('h3',{'class':'film-name'})[0].find_all('a')[0]
+            aid=det['href'].lstrip('/')
+            # print(bool(aid in dbo),aid)
+            try:
+                if aid[0:6]=='movie/' and not aid in dbo:
+                    r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                    rj=r.json()
+                    if not 'error' in rj:
+                        dbo[aid]={'response':rj}
+                elif aid[0:6]=='movie/':
+                    pass
+                else:
+                    if do_save:
+                        r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                        rj=r.json()
+                        if not 'error' in rj:
+                            dbo[aid]={'response':rj}
+
+            except:
+                pass
+            try:
+                sect_vids[aid]=dbo[aid]
+            except:
+                pass
+            # print(det['href'].lstrip('/'))
+            # print(det['title'])
+
+            # sub=' '.join([fdi.text for fdi in a.find_all('span',{'class':'fdi-item'})])
+            # print(sub)
+            # img=a.find_all('img')[0]
+            # print(img['data-src'])
+        dbh[sect_title]=sect_vids
+
+    if dboo!=dbo:
+        print('updating db_flixhq_all')
+        # db_flixhq_all.github_save(dbo,gittoken,gitrepo)
+        threading.Thread(target=db_flixhq_all.github_save,args=(dbo,gittoken,gitrepo)).start()
+    threading.Thread(target=db_flixhq_home.github_save,args=(dbh,gittoken,gitrepo)).start()
+    if request:
+        return HttpResponse('db_flixhq_home updated!')
+    else:
+        print('db_flixhq_home updated!')
+
+
+def flixhq_trending(request):
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+
+    dbo=db_flixhq_home.load()['Trending']
+    base_url=dj+'/polls/get_flixhq_ep/'
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    
+    for aid in dbo:
+        if not aid:
+            continue
+        istv=True if aid[0:2]=='tv' else False
+        print(aid)
+        print(dbo[aid].keys())
+        a=dbo[aid]['response']
+
+        if istv:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Season')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            addto(root,media,'streamUrl',base_url)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/')
+            season=addto(root,media,'season',None)
+            addto(root,item,'synopsis',
+                ''
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+            for e in a['episodes']:
+                url_args=pathargs(eid=e['id'],aid=aid)
+                addto(root,season,'episode',attr=dict(
+                    # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
+                    title='S'+str(e['season']).rjust(2,'0')+e['title'],
+                    url=base_url+url_args,
+                    subs=dj+'/polls/get_flixhq_sub/'+url_args
+                    ))
+        else:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Episode')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            url_args=pathargs(eid=a['episodes'][0]['id'],aid=aid)
+            addto(root,media,'streamUrl',base_url+url_args)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/'+url_args)
+            # season=addto(root,media,'season',None)
+            desc='Released: '+a['releaseDate']
+
+            addto(root,item,'synopsis',
+                desc
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
+    return HttpResponse(xml_str,content_type='text/xml')
+
+def flixhq_latest_series(request):
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+
+    dbo=db_flixhq_home.load()['latest tv shows']
+    base_url=dj+'/polls/get_flixhq_ep/'
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    
+    for aid in dbo:
+        if not aid:
+            continue
+        istv=True if aid[0:2]=='tv' else False
+        print(aid)
+        print(dbo[aid].keys())
+        a=dbo[aid]['response']
+
+        if istv:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Season')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            addto(root,media,'streamUrl',base_url)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/')
+            season=addto(root,media,'season',None)
+            addto(root,item,'synopsis',
+                ''
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+            for e in a['episodes']:
+                url_args=pathargs(eid=e['id'],aid=aid)
+                addto(root,season,'episode',attr=dict(
+                    # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
+                    title='S'+str(e['season']).rjust(2,'0')+e['title'],
+                    url=base_url+url_args,
+                    subs=dj+'/polls/get_flixhq_sub/'+url_args
+                    ))
+        else:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Episode')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            url_args=pathargs(eid=a['episodes'][0]['id'],aid=aid)
+            addto(root,media,'streamUrl',base_url+url_args)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/'+url_args)
+            # season=addto(root,media,'season',None)
+            desc='Released: '+a['releaseDate']
+
+            addto(root,item,'synopsis',
+                desc
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
+    return HttpResponse(xml_str,content_type='text/xml')
+
+def flixhq_latest_movies(request):
+    if request:
+        dj=request.build_absolute_uri().replace(request.path,'')
+    else:
+        dj=''
+
+    dbo=db_flixhq_home.load()['latest movies']
+    base_url=dj+'/polls/get_flixhq_ep/'
+    root = minidom.Document()
+    feed = root.createElement('feed')
+    root.appendChild(feed)
+    
+    for aid in dbo:
+        if not aid:
+            continue
+        istv=True if aid[0:2]=='tv' else False
+        print(aid)
+        print(dbo[aid].keys())
+        a=dbo[aid]['response']
+
+        if istv:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Season')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            addto(root,media,'streamUrl',base_url)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/')
+            season=addto(root,media,'season',None)
+            addto(root,item,'synopsis',
+                ''
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+            for e in a['episodes']:
+                url_args=pathargs(eid=e['id'],aid=aid)
+                addto(root,season,'episode',attr=dict(
+                    # title='S'+str(e['season']).rjust(2,'0')+'E'+str(e['number']).rjust(2,'0'),
+                    title='S'+str(e['season']).rjust(2,'0')+e['title'],
+                    url=base_url+url_args,
+                    subs=dj+'/polls/get_flixhq_sub/'+url_args
+                    ))
+        else:
+            title=rk.titlexml(a['title'])
+            thumbnail=a['image']
+
+            item=addto(root,feed,'item',attr=dict(
+                sdImg=thumbnail,
+                hdImg=thumbnail
+                ))
+
+            addto(root,item,'title',title)
+            addto(root,item,'contentId',aid)
+            addto(root,item,'contentType','Episode')
+            addto(root,item,'contentQuality','HD')
+            addto(root,item,'streamFormat','hls')
+            media=addto(root,item,'media')
+            url_args=pathargs(eid=a['episodes'][0]['id'],aid=aid)
+            addto(root,media,'streamUrl',base_url+url_args)
+            addto(root,media,'subtitleUrl',dj+'/polls/get_flixhq_sub/'+url_args)
+            # season=addto(root,media,'season',None)
+            desc='Released: '+a['releaseDate']
+
+            addto(root,item,'synopsis',
+                desc
+                )
+            addto(root,item,'genres',', '.join(a['genres']))
+
+    xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
+    return HttpResponse(xml_str,content_type='text/xml')

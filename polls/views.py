@@ -38,8 +38,8 @@ import db_flixhq_home
 from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
-apiconsu='https://rokuconsumet.herokuapp.com'
-# apiconsu='https://consumet-api.herokuapp.com'
+#apiconsu='https://rokuconsumet.herokuapp.com'
+apiconsu='https://consumet-api.herokuapp.com'
 
 
 from cryptography.fernet import Fernet

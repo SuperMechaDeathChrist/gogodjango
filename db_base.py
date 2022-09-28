@@ -1,4 +1,4 @@
-dbpath='db_flixhq_home.dat'
+# dbpath='db.dat'
 
 import pickle
 from github import Github
@@ -93,7 +93,6 @@ def github_get_sha(token,repo):
 def github_save(dbo,token,repo):
     dbo['']['saved']=time.time()
     g = Github(token)
-    
     try:
         repo = g.get_repo(repo)
     except:
@@ -214,6 +213,7 @@ def search(s):
     # print('x'*20)
     # print(closest)
     return closest,dbo[closest]
-
-if not os.path.exists(dbpath):
-    wipe()
+# if __name__!='__main__':
+#     global dbpath
+#     if not os.path.exists(dbpath):
+#         wipe()

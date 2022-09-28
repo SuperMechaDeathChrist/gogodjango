@@ -109,7 +109,7 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 
 
 
-import db_flixhq_all
+# import db_flixhq_all
 # db_flixhq_all.printdb()
 
 # # print(db_flixhq_all.load()['']['saved'],time.time(),(time.time()-db_flixhq_all.load()['']['saved']))
@@ -127,5 +127,13 @@ import db_flixhq_all
 
 import db_flixhq_home
 
-for k in db_flixhq_home.load():
+dbo=db_flixhq_home.github_download(gittoken,gitrepo)
+# dbo=db_flixhq_home.load()
+for k in dbo:
 	print(k)
+print(dbo[''])
+# dbo[''].pop('sha',None)
+# db_flixhq_home.save(dbo)
+# db_flixhq_home.printdb()
+
+# db_flixhq_home.github_save(dbo,gittoken,gitrepo)

@@ -1932,11 +1932,12 @@ def history_series(request):
 
     
     dbo=db_history.github_download(gittoken,gitrepo)
-    aids=db_flixhq.load()
+    aids=db_flixhq_all.load()
     
     root = minidom.Document()
     feed = root.createElement('feed')
     root.appendChild(feed)
+    do_gsave=False
     
     ii=0
     for aid in reversed(dbo):
@@ -1959,7 +1960,12 @@ def history_series(request):
 
         if istv:
             ii+=1
+            if 'error' in a:
+                a=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid)).json()
+                aids[aid]={'response':a}
+                do_gsave=True
             title=rk.titlexml(a['title'])
+
             thumbnail=a['image']
 
             item=addto(root,feed,'item',attr=dict(
@@ -2022,6 +2028,8 @@ def history_series(request):
             addto(root,item,'genres',', '.join(a['genres']))
 
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
+    if do_gsave:
+        threading.Thread(target=db_flixhq_all.github_save,args=(aids,gittoken,gitrepo)).start()
     return HttpResponse(xml_str,content_type='text/xml')
 
 def view_yt_queue(request):

@@ -1216,7 +1216,7 @@ def update_fav_series():
     #     aids=[
     #     'tv/watch-love-death-and-robots-42148'
     #     ]
-    series_results=dbo_all
+    # series_results=dbo_all
     ts=[]
     for aid in aids:
         if not aid:

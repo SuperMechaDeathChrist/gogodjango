@@ -39,7 +39,8 @@ from db import CaseInsensitiveDict
 
 apiurl='https://gogo4rokuapi.herokuapp.com'
 #apiconsu='https://rokuconsumet.herokuapp.com'
-apiconsu='https://consumet-api.herokuapp.com'
+# apiconsu='https://consumet-api.herokuapp.com'
+apiconsu='https://api.consumet.org'
 
 
 from cryptography.fernet import Fernet
@@ -1437,6 +1438,7 @@ def get_flixhq_ep(request):
     aid=request.GET.get('aid', None)
     if eid and aid:
         # ?eid=939832&aid=tv%2Fwatch-love-death-and-robots-42148
+        # ?episodeId=939832&mediaId=tv%2Fwatch-love-death-and-robots-42148&server='vidcloud'
         eid=request.GET.get('eid', None)
         aid=request.GET.get('aid', None)
         # print(eid)

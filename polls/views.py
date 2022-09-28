@@ -1448,6 +1448,7 @@ def get_flixhq_ep(request):
     global series_ep_cache
     eid=request.GET.get('eid', None)
     aid=request.GET.get('aid', None)
+
     if eid and aid:
         # ?eid=939832&aid=tv%2Fwatch-love-death-and-robots-42148
         # ?episodeId=939832&mediaId=tv%2Fwatch-love-death-and-robots-42148&server='vidcloud'
@@ -1457,13 +1458,16 @@ def get_flixhq_ep(request):
         # print(aid)
         if '"' in aid:
             aid=aid.split('"')[0]
+        aid=aid.rstrip('<')
 
         for iserver in ('vidcloud','upcloud','mixdrop'):
 
             try:
                 url_args=pathargs(episodeId=eid,server=iserver,mediaId=aid)
-
-                er=rq.get(apiconsu+'/movies/flixhq/watch'+url_args)
+                url=apiconsu+'/movies/flixhq/watch'+url_args
+                print(aid)
+                print(url)
+                er=rq.get(url)
                 erj=er.json()
                 stream_url=erj['sources'][0]['url']
                 validurl=True

@@ -15,7 +15,7 @@ else:
 	bs = BeautifulSoup(r.text,features='lxml')
 
 
-for sect in bs.find_all('section',{'class':'block_area block_area_home section-id-02'}):
+for sect in bs.find_all('section',{'class':'block_area block_area_home section-id-01'}):
 	sect_title=sect.find_all('h2',{'class':'cat-heading'})[0].text
 	if sect_title=='Coming Soon':
 		continue
@@ -24,13 +24,16 @@ for sect in bs.find_all('section',{'class':'block_area block_area_home section-i
 	for a in sect.find_all('div', {"class": "flw-item"}):
 	    print('-'*20)
 	    det=a.find_all('h3',{'class':'film-name'})[0].find_all('a')[0]
-	    print(det['href'].lstrip('/'))
-	    print(det['title'])
+	    
 
 	    sub=' '.join([fdi.text for fdi in a.find_all('span',{'class':'fdi-item'})])
-	    print(sub)
+	    
 	    img=a.find_all('img')[0]
-	    print(img['data-src'])
+	    # print(det['href'].lstrip('/'))
+	    # print(det['title'])
+	    # print(sub)
+	    # print(img['data-src'])
+	    
 	    # print(a.text)
 
 

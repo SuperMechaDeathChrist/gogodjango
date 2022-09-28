@@ -125,15 +125,24 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 
 # db_flixhq_all.github_save(dbo,gittoken,gitrepo)
 
-import db_flixhq_home
+# import db_flixhq_home
 
-dbo=db_flixhq_home.github_download(gittoken,gitrepo)
-# dbo=db_flixhq_home.load()
-for k in dbo:
-	print(k)
-print(dbo[''])
+# dbo=db_flixhq_home.github_download(gittoken,gitrepo)
+# # dbo=db_flixhq_home.load()
+# for k in dbo:
+# 	print(k)
+# print(dbo['latest tv shows'])
+# print(dbo['latest movies'])
 # dbo[''].pop('sha',None)
 # db_flixhq_home.save(dbo)
 # db_flixhq_home.printdb()
 
 # db_flixhq_home.github_save(dbo,gittoken,gitrepo)
+
+import db_flixhq_all
+dbo=db_flixhq_all.load().copy()
+db_flixhq_all.wipe()
+dbn=db_flixhq_all.load()
+dbn['']=dbo['']
+db_flixhq_all.save(dbn)
+db_flixhq_all.github_save(dbn,gittoken,gitrepo)

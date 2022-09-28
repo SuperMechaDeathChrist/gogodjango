@@ -1144,8 +1144,9 @@ def get_anime(request,aid):
 
 series_results={}
 anime_results={}
-def _down_response(curl,aid,dbid):
-    global series_results,anime_results
+dbo_all={}
+def _down_response(curl,aid,dbid,do_save=False):
+    global series_results,anime_results,dbo_all
     #
     try:
         # curl=apiconsu+'/movies/flixhq/info'+pathargs(id=aid)
@@ -1156,6 +1157,8 @@ def _down_response(curl,aid,dbid):
         if dbid=='flixhq':
             if 'title' in a:
                 series_results[aid]=dict(response=a)
+                if do_save:
+                    dbo_all[aid]=dict(response=a)
         elif dbid=='gogoanime':
             anime_results[aid]=dict(response=a)
         print(curl)
@@ -1202,16 +1205,18 @@ def update_fav_anime():
     print('db updated to github')
     anime_results={}
 def update_fav_series():
-    global series_results
+    global series_results,dbo_all
     print('+'*20)
     print('updating fav series')
     print('+'*20)
     aids=db_flixhq.github_download(gittoken,gitrepo,do_save=True)
+    dbo_all=db_flixhq_all.load()
+    recent_home=bool(abs(time.time()-dbo_all['']['saved'])/60<30)
     # if len(aids)<2:
     #     aids=[
     #     'tv/watch-love-death-and-robots-42148'
     #     ]
-
+    series_results=dbo_all
     ts=[]
     for aid in aids:
         if not aid:
@@ -1234,8 +1239,12 @@ def update_fav_series():
             # except:
             #     traceback.print_exc()
         # ti()
-            ts.append(threading.Thread(target=_down_response,args=(apiconsu+'/movies/flixhq/info'+pathargs(id=aid),aid,'flixhq',)))
-            ts[-1].start()
+            if recent_home and aid in dbo_all:
+                ts.append(threading.Thread(target=_down_response,args=(apiconsu+'/movies/flixhq/info'+pathargs(id=aid),aid,'flixhq',)))
+                ts[-1].start()
+            elif not recent_home and not aid in dbo_all:
+                ts.append(threading.Thread(target=_down_response,args=(apiconsu+'/movies/flixhq/info'+pathargs(id=aid),aid,'flixhq',)))
+                ts[-1].start()
     for tti in ts:
         tti.join()
 
@@ -2218,7 +2227,7 @@ def update_feed_flixhq_home(request=None):
         sect_title=sect.find_all('h2',{'class':'cat-heading'})[0].text
         if sect_title=='Coming Soon':
             continue
-        # print(sect_title)
+        print(sect_title)
         sect_vids={}
         for a in sect.find_all('div', {"class": "flw-item"}):
             # print('-'*20)
@@ -2226,15 +2235,17 @@ def update_feed_flixhq_home(request=None):
             aid=det['href'].lstrip('/')
             # print(bool(aid in dbo),aid)
             try:
+                print(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
                 if aid[0:6]=='movie/' and not aid in dbo:
                     r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
                     rj=r.json()
+                    print(rj)
                     if not 'error' in rj:
                         dbo[aid]={'response':rj}
                 elif aid[0:6]=='movie/':
                     pass
                 else:
-                    if do_save:
+                    if do_save or not aid in dbo:
                         r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
                         rj=r.json()
                         if not 'error' in rj:
@@ -2242,10 +2253,14 @@ def update_feed_flixhq_home(request=None):
 
             except:
                 pass
+            
+            # sect_vids[aid]=dbo[aid]
+
             try:
                 sect_vids[aid]=dbo[aid]
             except:
                 pass
+            
             # print(det['href'].lstrip('/'))
             # print(det['title'])
 
@@ -2357,6 +2372,7 @@ def flixhq_latest_series(request):
     root = minidom.Document()
     feed = root.createElement('feed')
     root.appendChild(feed)
+
     
     for aid in dbo:
         if not aid:

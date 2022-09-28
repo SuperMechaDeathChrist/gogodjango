@@ -1,5 +1,5 @@
 dbpath='db_flixhq.dat'
-dbpath='db_flixhq_all.dat'
+# dbpath='db_flixhq_all.dat'
 import pickle
 from github import Github
 import unicodedata

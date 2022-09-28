@@ -1157,8 +1157,8 @@ def _down_response(curl,aid,dbid,do_save=False):
         if dbid=='flixhq':
             if 'title' in a:
                 series_results[aid]=dict(response=a)
-                if do_save:
-                    dbo_all[aid]=dict(response=a)
+                # if do_save:
+                #     dbo_all[aid]=dict(response=a)
         elif dbid=='gogoanime':
             anime_results[aid]=dict(response=a)
         print(curl)
@@ -1216,7 +1216,7 @@ def update_fav_series():
     #     aids=[
     #     'tv/watch-love-death-and-robots-42148'
     #     ]
-    # series_results=dbo_all
+    series_results=dbo_all
     ts=[]
     for aid in aids:
         if not aid:
@@ -1249,8 +1249,11 @@ def update_fav_series():
         tti.join()
 
     for k in series_results:
+        dbo_all[k,series_results[k]]
         db_flixhq.add(k,series_results[k])
     db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
+    if dbo_all:
+        db_flixhq_all.github_save(dbo_all,gittoken,gitrepo)
     print('db_flixhq updated to github')
     series_results={}
 

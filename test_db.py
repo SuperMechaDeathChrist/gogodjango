@@ -11,8 +11,10 @@ gittoken = fernet.decrypt(encMessage).decode()
 
 gitrepo="SuperMechaDeathChrist/gogodjango"
 
+import db_flixhq
 # dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
-# db_flixhq.printdb()
+dbo=db_flixhq.load()
+db_flixhq.printdb()
 # #dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
 
 # for k in dbo:
@@ -139,10 +141,10 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 
 # db_flixhq_home.github_save(dbo,gittoken,gitrepo)
 
-import db_flixhq_all
-dbo=db_flixhq_all.load().copy()
-db_flixhq_all.wipe()
-dbn=db_flixhq_all.load()
-dbn['']=dbo['']
-db_flixhq_all.save(dbn)
-db_flixhq_all.github_save(dbn,gittoken,gitrepo)
+# import db_flixhq_all
+# dbo=db_flixhq_all.load().copy()
+# db_flixhq_all.wipe()
+# dbn=db_flixhq_all.load()
+# dbn['']=dbo['']
+# db_flixhq_all.save(dbn)
+# db_flixhq_all.github_save(dbn,gittoken,gitrepo)

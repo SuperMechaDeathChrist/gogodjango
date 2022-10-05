@@ -768,7 +768,7 @@ yt_channels={
     }
 
 def categories(request):
-    threading.Thread(target=update_feed_flixhq_home).start()
+
     x=threading.Thread(target=update_fav_anime)
     x.start()
     y=threading.Thread(target=update_fav_series)
@@ -778,6 +778,10 @@ def categories(request):
     # with open(r"C:\c\Python_projects\anime_site\api\polls\categories.xml", 'r',encoding='utf-8') as fid:
     #     ans=fid.read()
     dj=request.build_absolute_uri().replace(request.path,'')
+
+    threading.Thread(target=update_feed_flixhq_home).start()
+    # threading.Thread(target=rq.get,args=(dj+'/polls/update_feed_flixhq_home',)).start()
+
     ans=f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <categories>
 
@@ -1249,9 +1253,11 @@ def update_fav_series():
         tti.join()
 
     for k in series_results:
-        dbo_all[k,series_results[k]]
-        db_flixhq.add(k,series_results[k])
-    db_flixhq.github_save(db_flixhq.load(),gittoken,gitrepo)
+        dbo_all[k]=series_results[k]
+        if k in aids:
+            aids[k]=series_results[k]
+        # db_flixhq.add(k,series_results[k])
+    db_flixhq.github_save(aids,gittoken,gitrepo)
     if dbo_all:
         db_flixhq_all.github_save(dbo_all,gittoken,gitrepo)
     print('db_flixhq updated to github')
@@ -1437,12 +1443,15 @@ def removefrom_yt_queue(request,aid):
     dj=request.build_absolute_uri().replace(request.path,'')
     if '?' in dj:
         dj=dj.split('?')[0]
-    if db_yt_queue.github_remove(aid,gittoken,gitrepo):
-        # if request: return HttpResponse("Success: removed "+aid)
-        if request: return HttpResponse(_html_added('Success!','removed',aid,dj+'/polls/view_yt_queue/'))
-    else:
-        # if request: return HttpResponse("Failiure: not removed "+aid)
-        if request: return HttpResponse(_html_added('Failiure!','not removed',aid,dj+'/polls/view_yt_queue/'))
+    try:
+        if db_yt_queue.github_remove(aid,gittoken,gitrepo):
+            # if request: return HttpResponse("Success: removed "+aid)
+            if request: return HttpResponse(_html_added('Success!','removed',aid,dj+'/polls/view_yt_queue/'))
+        else:
+            # if request: return HttpResponse("Failiure: not removed "+aid)
+            if request: return HttpResponse(_html_added('Failiure!','not removed',aid,dj+'/polls/view_yt_queue/'))
+    except:
+        return HttpResponse(_html_added('Failiure!','not removed',aid,dj+'/polls/view_yt_queue/'))
 
 def get_flixhq_ep(request):
     global series_ep_cache

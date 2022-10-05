@@ -14,12 +14,17 @@ gitrepo="SuperMechaDeathChrist/gogodjango"
 import db_flixhq
 # dbo=db_flixhq.github_download(token=gittoken,repo=gitrepo,do_save=True)
 dbo=db_flixhq.load()
-db_flixhq.printdb()
+# db_flixhq.printdb()
 # #dbo=db.github_download(token=gittoken,repo=gitrepo,do_save=True)
 
-# for k in dbo:
-# 	if k:
+c=-1
+for k in dbo:
+	c+=1
+	if k:
 		# db_flixhq_all.add(k,dbo[k])
+		print(c,k)
+		if c>80:
+			db_flixhq.remove(k)
 # 		print(k,dbo[k]['response']['episodes'])
 # 		# print(k,dbo[k]['response']['episodes'])
 # 		# print('\n'*10)
@@ -27,6 +32,8 @@ db_flixhq.printdb()
 # 		# r=requests.get('http://192.168.0.34:3000/polls/addto_fav/'+k)
 # 		# print(r.text)
 # 		print(k,dbo[k]['response']['episodes'][0])
+
+db_flixhq.github_save(dbo,gittoken,gitrepo)
 
 # import pickle
 # from db_flixhq import CaseInsensitiveDict

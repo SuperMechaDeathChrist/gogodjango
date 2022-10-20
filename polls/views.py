@@ -441,7 +441,7 @@ def search_anime(request):
     # return render(request, "geeks.html", context)
     # print(last_query['animes'])
     return render(request, "search.html",context)
-
+invidious_inst=['https://invidious.snopyta.org','https://vid.puffyan.us','https://inv.riverside.rocks','https://invidious.esmailelbob.xyz','https://invidious.namazso.eu','https://yt.artemislena.eu']
 def search_youtube(request):
     # global last_query
     # last_query['animes']={}
@@ -473,9 +473,11 @@ def search_youtube(request):
                             nfs.append('../removefrom_yt_queue/'+vid)
                         break
                     elif mode=='invidious':
+                        
                 # https://vid.puffyan.us//api/v1/search?q=ghost&fields=title,author,publishedText
                 # for i in range(5):
-                        url='https://vid.puffyan.us//api/v1/search?q='+requests.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText,lengthSeconds'
+                        inst=invidious_inst[random.randint(0,len(invidious_inst))-1]
+                        url=f'{inst}/api/v1/search?q='+requests.utils.quote(search_query,safe='')+'&'+'fields=title,videoId,author,publishedText,lengthSeconds'
                         print(url)
                     # try:
                         r=rq.get(url)
@@ -722,16 +724,28 @@ yt_channels={
     'Boy boy':'UC_S45UpAYVuc0fYEcHN9BVQ',
     'I did a thing':'UCJLZe_NoiG0hT7QCX_9vmqw',
     'H3 Pocdast':'UCLtREJY21xRfCuEKvdki1Kw',
-    'HasanAbi':'UCtoaZpBnrd0lhycxYJ4MNOQ',
     'Channel 5 with Andrew Callaghan':'UC-AQKm7HUNMmxjdS371MSwg',
+    'HasanAbi':'UCtoaZpBnrd0lhycxYJ4MNOQ',
+    'Daily Dose of HasanAbi':'UCqsq-k2LLwJ-UM77pLrEbHw',
     'Hasanabi Moments':'UCobue-_fUPSIwdWULdE3MbQ',
+    'HasanAbi Industries':'UCz2n05fvYYoVTrhq1ZUnyHA',
+    'Hasanabi Reactlord':'UCBwbwVWMGEQSzJ0T7-YwtHA',
+    'Hasanabi Enterprise':'UCMmJp0vS2hX8Tgc1xcSELpg',
+    'Hasan Reactions':'UC1hW1iEFDsW-6V0zC8jqVQA',
+    'Hasanabi Productions':'UCBBQ9PIs8ARguuwVJZowGIg',
+    'Joel Haver':'UCVIFCOJwv3emlVmBbPCZrvw',
     'Stoned Gremlin Productions':'UCIO689mgXeuzH4M5NS7wZwg',
     'Ryan George':'UCh9IfI45mmk59eDvSWtuuhQ',
     'Pitch Meeting':'UC9Kq-yEt1iYsbUzNOoIRK0g',
     'El Pulso De La República':'UCK0_zBeybLuyXbOcHp7wmJA',
+    'Grupo Fórmula':'UCzmd9Aj2wmPggWZJpLdBB8Q',
     'Wisecrack':'UC6-ymYjG0SU0jUWnWh9ZzEQ',
     'Screen Junkies':'UCOpcACMWblDls9Z6GERVi1A',
     'Steve Reviews':'UCqERpXggAprNW8QT_WO1N5Q',
+    'TVSins':'UCe4bOvc1mYxFcQ5xPb9Zmow',
+    'riserecords':'UCxnS0WDBVfBnTP2e97DYDSA',
+    'Eclipse Records':'UC6Qasp2KPxCeiwDtFrvpOGA',
+    'Century Media Records':'UCnK9PxMozTYs8ELOvgMNKFA',
     'Cold Ones':'UCfbnTUxUech4P1XgYUwYuKA',
     'Vargskelethor Uncut: Full Joel Streams':'UCRNCUBq676nUhXyy8AJzD5w',
     'Vargskelethor Joel: Mini Highlights':'UC1O1dhQcJQTycjcoeTSiuuw',
@@ -742,12 +756,17 @@ yt_channels={
     'Billiam':'UCcHBw_Rs56RFcisYAOlFfmQ',
     'Jordan Fringe':'UCJKE87wqkVvbP2hUJcAKJNw',
     'Funny Or Die':'UCzS3-65Y91JhOxFiM7j6grg',
+    'Michael Reeves':'UCtHaxi4GTYDpJgMSGy7AeSw',
+    'HasanAbi Fix':'UClZj4-rsMlX2BqwG7I7wQLA',
+    'The Problem With Jon Stewart':'UC5HJaVyYgo7WPCvIBchRBzQ',
+    'penguinz0':'UCq6VFHwMzcMXbuKyG7SQYIg',
     'SaberSpark':'UCeGGpOehPGG7vQMUVc7tG8Q',
     'Cofeezilla':'UCFQMnBA3CS502aghlcr0_aw',
     'Kitboga':'UCm22FAXZMw1BaWeFszZxUKw',
     'Ink Master':'UCzrh2s9Vu9wUBf2Y2iIYcgA',
     'Jeremy Jahns':'UC7v3-2K1N84V67IF-WTRG-Q',
     'JoshDub':'UC9DWJ33CMvIseLlyx6hyRnA',
+    'Zorman World':'UCu9DFMTm98z_sXyoDLSbc2w',
     'My Thoughts Will Probably Offend You':'UCbR-GzksKvEc1dgqvMG1QtQ',
     'Observe':'UCzMvqwt21xqm7Fg5Uo3lsRQ',
     'Phelan Porteous':'UCUp4yFAjgOA11a4h568vnrA',
@@ -756,6 +775,7 @@ yt_channels={
     'Some More News':'UCvlj0IzjSnNoduQF0l3VGng',
     'TheWizWiki':'UClh9mrZULUGRQf-2oqPnPaw',
     'WatchMojo':'UCaWd5_7JhbQBe4dknZhsHJg',
+    'CollegeHumor':'UCPDXXXJj9nax0fr0Wfc048g',
     'Aamon Animations':'UCo4au6lRX4-_gIczBneEZWA',
     'Alien\'s Guide':'UCu6DDGoV21YhwSb5iWbriAw',
     'Cynical Reviews':'UC1DCPS2j-o0bvfIilkc8RSw',
@@ -765,6 +785,39 @@ yt_channels={
     'UpIsNotJump':'UCFLwN7vRu8M057qJF8TsBaA',
     'Vivziepop':'UCzfyYtgvkx5mLy8nlLlayYg',
     'Your Narrator':'UChfYPe-r_5EMHbBMT-YuYsA',
+    'Napalm Records':'UCG7AaCh_CiG6pq_rRDNw72A',
+    'Marty Music':'UCmnlTWVJysjWPFiZhQ5uudg',
+    'Scotty Kilmer':'UCuxpxCCevIlF-k-K5YU8XPA',
+    'Metal Blade Records':'UCSldglor1t-5E-Gy2eBdMrA',
+    'Emergency Awesome':'UCDiFRMQWpcp8_KD4vwIVicw',
+    'Latinus_us':'UC-FVhfqCwhzpJ4DTJOMMofA',
+    'LastWeekTonight':'UC3XTzVzaHQEd30rQbuvCtTQ',
+    'Matthew Kiichichaos Heafy':'UCJ05pLKdBCcZpaQlixNlZAg',
+    'JonTronShow':'UCdJdEguB1F1CiYe7OEi3SBg',
+    'darkTunes Music Group':'UCuCYsYBaq3j0gM4wWo82LkQ',
+    'NUMBSKULLS':'UCZSCvpp33elIQdn52NRaJ0Q',
+    'Adult Swim':'UCgPClNr5VSYC3syrDUIlzLw',
+    'CinnamonToastKen':'UCepq9z9ovYGxhNrvf6VMSjg',
+    'The Daily Show with Trevor Noah':'UCwWhs_6x42TyRM4Wstoq8HA',
+    'münecat':'UCqNpjt_UcMPgm_9gphZgHYA',
+    'enchufetv':'UCoGDh1Xa3kUCpok24JN5DKA',
+    'Nuclear Blast Records':'UCoxg3Kml41wE3IPq-PC-LQw',
+    'Frontiers Music srl':'UCBLAoqCQyz6a0OvwXWzKZag',
+    'Sumerian Records':'UCAtlZO9a52JIhQRyXDRLaZQ',
+    'Channel Awesome':'UCiH828EtgQjTyNIMH6YiOSw',
+    'Avatar Metal':'UCyaPf0E-PRRZH3UvvxNPeEw',
+    'Eclipse Records':'UC6Qasp2KPxCeiwDtFrvpOGA',
+    'AngryJoeShow':'UCsgv2QHkT2ljEixyulzOnUQ',
+    'El Hank':'UCo17PdEv0S3AZWclXwrLdXg',
+    'Better Noise Music':'UCqh8RdUfSR9lGyasBhM_bjA',
+    'Screen Rant':'UC2iUwfYi_1FCGGqhOUNx-iA',
+    'Lolweapon':'UCw2KIu_oU6qHYOnL7QQ3NUw',
+    'Fandom Games':'UCf6J9yokPS0ys456jvjLBGQ',
+    'Andy Guitar':'UC9cvVvlvr-qBssphm1EdYGQ',
+    'Comedy Central':'UCUsN5ZwHx2kILm84-jPDeXw',
+    'Cinematic Excrement':'UCStzEOk2Pfftjy2f2sHjflg',
+    'Movie Files':'UCqD7CXlHe1jNemKzFjkOUlQ',
+
     }
 
 
@@ -871,10 +924,11 @@ def feed_yt_channel(request):
     
 
     fields='?fields=author,authorId,authorThumbnails,description,subCount,latestVideos'
-    inst='https://vid.puffyan.us/api/v1'
+    # inst='https://vid.puffyan.us/api/v1'
+    inst=invidious_inst[random.randint(0,len(invidious_inst))-1]
     headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36"}
 
-    url=inst+'/channels/'+cid+fields
+    url=inst+'/api/v1/channels/'+cid+fields
     # print(url)
     rj=rq.get(url,headers=headers).json()
 
@@ -930,7 +984,7 @@ def recent_gogo(dj,rtype='/recent-release'):
     root.appendChild(feed)
     for a in rj:
         title=rk.titlexml(a['animeTitle'])
-        desc='Epidose '+a['episodeNum']
+        desc='Episode '+a['episodeNum']
         url=dj+'/polls/get_ep/'+a['episodeId']
         thumbnail=a['animeImg']
         item=addto(root,feed,'item',attr=dict(
@@ -1682,6 +1736,7 @@ def favorite_movies(request):
 def get_yt_stream(request,):
     aid=request.GET.get('aid', None)
     isqueue=request.GET.get('queue',None)
+
     if aid:
         print(aid)
         try:
@@ -1697,11 +1752,19 @@ def get_yt_stream(request,):
             # traceback.print_exc()
             try:
                 try:
-                    r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+                    inst=invidious_inst[random.randint(0,len(invidious_inst))-1]
+                    r=rq.get(f'{inst}/api/v1/videos/{aid}?fields=formatStreams')
                     rj=r.json()
                 except:
                     time.sleep(1.5)
-                    r=rq.get(f'https://vid.puffyan.us//api/v1/videos/{aid}?fields=formatStreams')
+                    while True:
+                        ninst=invidious_inst[random.randint(0,len(invidious_inst))-1]
+                        if ninst==inst:
+                            continue
+                        else:
+                            inst=ninst
+                            break
+                    r=rq.get(f'{inst}/api/v1/videos/{aid}?fields=formatStreams')
                     rj=r.json()
                 for st in rj['formatStreams']:
                     if 'video/mp4' in st['type']:

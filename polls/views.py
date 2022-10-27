@@ -833,7 +833,7 @@ def categories(request):
     #     ans=fid.read()
     dj=request.build_absolute_uri().replace(request.path,'')
 
-    threading.Thread(target=update_feed_flixhq_home).start()
+    # threading.Thread(target=update_feed_flixhq_home).start()
     # threading.Thread(target=rq.get,args=(dj+'/polls/update_feed_flixhq_home',)).start()
 
     ans=f'''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2430,18 +2430,132 @@ def update_feed_flixhq_home(request=None):
     else:
         print('db_flixhq_home updated!')
 
+def get_feed_flixhq_home(hkey,request=None):
+    # global threads
+
+    # if not flixhome_update_finished[0]:
+        # return
+    # flixhome_update_finished[0]=False
+    
+    # dbh=db_flixhq_home.load()
+    # db_flixhq_home.wipe()
+    # dbh=db_flixhq_home.load()
+    # db_flixhq_home.github_save(dbh,gittoken,gitrepo)
+
+    #dbo=db_flixhq_all.github_download(gittoken,gitrepo)
+    # db_flixhq_all.wipe()
+    dbo=db_flixhq_all.load()
+
+    
+
+    # do_save=bool(abs(time.time()-dbo['']['saved'])/60>30)
+    # do_save=True
+    # print((time.time()-dbo['']['saved'])/60)
+    # dboo=dbo.copy()
+
+    headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36"}
+    r=rq.get('https://flixhq.to/home')
+    bs = BeautifulSoup(r.text.replace('block_area block_area_home section-id-01','block_area block_area_home section-id-02'),features='lxml')
+    for sect in bs.find_all('section',{'class':'block_area block_area_home section-id-02'}):
+        sect_title=sect.find_all('h2',{'class':'cat-heading'})[0].text
+        if sect_title=='Coming Soon' or sect_title.lower()!=hkey.lower():
+            continue
+        print(sect_title)
+        
+        sect_vids={}
+        result={}
+        threads={}
+
+        for a in sect.find_all('div', {"class": "flw-item"}):
+            # print('-'*20)
+            det=a.find_all('h3',{'class':'film-name'})[0].find_all('a')[0]
+            aid=det['href'].lstrip('/')
+            # print(bool(aid in dbo),aid)
+            try:
+                #print(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                if aid[0:6]=='movie/' and not aid in dbo:
+                    #print(aid,'---------')
+                    threads[aid]=threading.Thread(target=tflixreq, args=(apiconsu+'/movies/flixhq/info'+pathargs(id=aid), result, aid,))
+                    threads[aid].start()
+                    # r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                    # rj=r.json()
+                    # print(rj)
+                    # if not 'error' in rj:
+                    #     dbo[aid]={'response':rj}
+                elif aid[0:6]=='movie/':
+                    pass
+                else:
+                    # if do_save or not aid in dbo:
+                    if not aid in dbo:
+                        #print(aid,'---------')
+                        threads[aid]=threading.Thread(target=tflixreq, args=(apiconsu+'/movies/flixhq/info'+pathargs(id=aid), result, aid,))
+                        threads[aid].start()
+                        # r=rq.get(apiconsu+'/movies/flixhq/info'+pathargs(id=aid))
+                        # rj=r.json()
+                        # if not 'error' in rj:
+                        #     dbo[aid]={'response':rj}
+
+            except:
+                traceback.print_exc()
+            time.sleep(.2)
+            
+            # sect_vids[aid]=dbo[aid]
+
+            # try:
+            #     sect_vids[aid]=dbo[aid]
+            # except:
+            #     pass
+            
+            # print(det['href'].lstrip('/'))
+            # print(det['title'])
+
+            # sub=' '.join([fdi.text for fdi in a.find_all('span',{'class':'fdi-item'})])
+            # print(sub)
+            # img=a.find_all('img')[0]
+            # print(img['data-src'])
+        #print(threads)
+        for aid in threads:
+            threads[aid].join()
+
+        for aid in result:
+            rj=result[aid]
+            if not 'error' in rj:
+                dbo[aid]={'response':rj}
+                sect_vids[aid]=dbo[aid]
+                # try:
+                    
+                # except:
+                #     pass
+        return sect_vids
+        dbh[sect_title.lower().strip()]=sect_vids
+
+    # if dboo!=dbo:
+    #     print('updating db_flixhq_all')
+    #     # db_flixhq_all.github_save(dbo,gittoken,gitrepo)
+    #     threading.Thread(target=db_flixhq_all.github_save,args=(dbo,gittoken,gitrepo)).start()
+    
+    db_flixhq_home.save(dbh)
+    flixhome_update_finished[0]=True
+
+    # threading.Thread(target=db_flixhq_home.github_save,args=(dbh,gittoken,gitrepo)).start()
+    if request:
+        return HttpResponse('db_flixhq_home updated!')
+    else:
+        print('db_flixhq_home updated!')
+
 
 
 def flixhq_trending(request):
-    while not flixhome_update_finished[0]:
-        time.sleep(.3)
+    # while not flixhome_update_finished[0]:
+    #     time.sleep(.3)
 
     if request:
         dj=request.build_absolute_uri().replace(request.path,'')
     else:
         dj=''
 
-    dbo=db_flixhq_home.load()['trending']
+    # dbo=db_flixhq_home.load()['trending']
+    dbo=get_feed_flixhq_home('trending')
 
     base_url=dj+'/polls/get_flixhq_ep/'
     root = minidom.Document()
@@ -2517,15 +2631,16 @@ def flixhq_trending(request):
     return HttpResponse(xml_str,content_type='text/xml')
 
 def flixhq_latest_series(request):
-    while not flixhome_update_finished[0]:
-        time.sleep(.3)
+    # while not flixhome_update_finished[0]:
+    #     time.sleep(.3)
 
     if request:
         dj=request.build_absolute_uri().replace(request.path,'')
     else:
         dj=''
 
-    dbo=db_flixhq_home.load()['latest tv shows']
+    # dbo=db_flixhq_home.load()['latest tv shows']
+    dbo=get_feed_flixhq_home('latest tv shows')
     #print(dbo.keys())
     base_url=dj+'/polls/get_flixhq_ep/'
     root = minidom.Document()
@@ -2601,16 +2716,19 @@ def flixhq_latest_series(request):
     xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes') 
     return HttpResponse(xml_str,content_type='text/xml')
 
+# threading.Thread(target=update_feed_flixhq_home).start()
+
 def flixhq_latest_movies(request):
-    while not flixhome_update_finished[0]:
-        time.sleep(.3)
+    # while not flixhome_update_finished[0]:
+    #     time.sleep(.3)
 
     if request:
         dj=request.build_absolute_uri().replace(request.path,'')
     else:
         dj=''
 
-    dbo=db_flixhq_home.load()['latest movies']
+    # dbo=db_flixhq_home.load()['latest movies']
+    dbo=get_feed_flixhq_home('latest movies')
     #print(dbo.keys())
     base_url=dj+'/polls/get_flixhq_ep/'
     root = minidom.Document()

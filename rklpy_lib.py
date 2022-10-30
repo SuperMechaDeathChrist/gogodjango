@@ -201,6 +201,7 @@ def ensure_dir2(directory):
 ##________________PENDING FUNCTIONS_______________##
 def titlexml( str ):
     #eliminate the already in xml format
+    str = str.replace(":", "")
     str = str.replace("&amp;", "&")
     str = str.replace("&lt;", "<")
     str = str.replace("&gt;", ">")

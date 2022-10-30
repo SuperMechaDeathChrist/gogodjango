@@ -441,7 +441,7 @@ def search_anime(request):
     # return render(request, "geeks.html", context)
     # print(last_query['animes'])
     return render(request, "search.html",context)
-invidious_inst=['https://invidious.snopyta.org','https://vid.puffyan.us','https://inv.riverside.rocks','https://invidious.esmailelbob.xyz','https://invidious.namazso.eu','https://yt.artemislena.eu']
+invidious_inst=['https://vid.puffyan.us','https://inv.riverside.rocks','https://invidious.snopyta.org','https://invidious.esmailelbob.xyz','https://invidious.namazso.eu','https://yt.artemislena.eu']
 def search_youtube(request):
     # global last_query
     # last_query['animes']={}
@@ -925,12 +925,26 @@ def feed_yt_channel(request):
 
     fields='?fields=author,authorId,authorThumbnails,description,subCount,latestVideos'
     # inst='https://vid.puffyan.us/api/v1'
-    inst=invidious_inst[random.randint(0,len(invidious_inst))-1]
-    headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36"}
+    succ=False
+    for inst in invidious_inst:
+        # inst=invidious_inst[random.randint(0,len(invidious_inst))-1]
 
-    url=inst+'/api/v1/channels/'+cid+fields
-    # print(url)
-    rj=rq.get(url,headers=headers).json()
+        headers = {"User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 12871.102.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.141 Safari/537.36"}
+
+        url=inst+'/api/v1/channels/'+cid+fields
+        # print(url)
+
+        try:
+            rj=rq.get(url,headers=headers).json()
+            rj['latestVideos']
+            succ=True
+            break
+        except:
+            continue
+
+    if not succ:
+        xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
+        return HttpResponse(xml_str,content_type='text/xml')
 
     for a in rj['latestVideos']:
 

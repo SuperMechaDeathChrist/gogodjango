@@ -206,9 +206,9 @@ def titlexml( str ):
     str = str.replace("&lt;", "<")
     str = str.replace("&gt;", ">")
     str = str.replace("&quot;", "\"")
-    str = str.replace('\'', '&apos;')
+    str = str.replace('&apos;','\'')
     #end eliminate the already in xml format
-    str = str.replace("&", "&amp;")
+    str = str.replace("&", " &amp; ")
     str = str.replace("<", "&lt;")
     str = str.replace(">", "&gt;")
     str = str.replace("\"", "&quot;")

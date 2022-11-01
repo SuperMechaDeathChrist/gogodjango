@@ -37,6 +37,8 @@ import db_flixhq_all
 import db_flixhq_home
 from db import CaseInsensitiveDict
 
+import read_xml
+
 apiurl='https://gogo4rokuapi.herokuapp.com'
 #apiconsu='https://rokuconsumet.herokuapp.com'
 # apiconsu='https://consumet-api.herokuapp.com'
@@ -926,6 +928,7 @@ def feed_yt_channel(request):
     fields='?fields=author,authorId,authorThumbnails,description,subCount,latestVideos'
     # inst='https://vid.puffyan.us/api/v1'
     succ=False
+    legacy=True
     for inst in invidious_inst:
         # inst=invidious_inst[random.randint(0,len(invidious_inst))-1]
 
@@ -935,12 +938,33 @@ def feed_yt_channel(request):
         # print(url)
 
         try:
-            rj=rq.get(url,headers=headers).json()
-            rj['latestVideos']
-            succ=True
-            break
+            if legacy:
+                legacyurl='https://www.youtube.com/feeds/videos.xml?channel_id='+cid
+                print(legacyurl)
+                rj={}
+                rj['latestVideos']=read_xml.read_yt_xml_channel_feed( rq.get(legacyurl,headers=headers).text)
+                succ=True
+                break
+            else:
+
+                rj=rq.get(url,headers=headers).json()
+                print(url)
+                # print(rj)
+                rj['latestVideos']
+                succ=True
+                break
+                # if len(rj['latestVideos']):
+                #     succ=True
+                #     break
+                # else:
+                    # raise FileNotFoundError
+
+
+
         except:
+            traceback.print_exc()
             continue
+
 
     if not succ:
         xml_str = root.toprettyxml(indent ="  ",encoding='UTF-8',standalone='yes')
@@ -974,7 +998,10 @@ def feed_yt_channel(request):
         url_args=pathargs(aid=a['videoId'])
         addto(root,media,'streamUrl',base_url+url_args)
         # desc=a['shortDescription']
-        desc=a['publishedText']+'\n'+'Duration: '+ short_h_m_s(a['lengthSeconds'])+'\n'+format(a['viewCount'],',')+str(' views ')
+        if legacy:
+            desc=a['publishedText']+'\n'+format(a['viewCount'],',')+str(' views ')
+        else:
+            desc=a['publishedText']+'\n'+'Duration: '+ short_h_m_s(a['lengthSeconds'])+'\n'+format(a['viewCount'],',')+str(' views ')
 
         addto(root,item,'synopsis',
             desc
